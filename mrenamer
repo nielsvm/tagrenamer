@@ -447,7 +447,7 @@ class Collection():
   # Sanitize all extracted meta data for file system usage and validate input.
   def sanitize(self):
     debug("'%s' sanitize()" % self, 1)
-    msg(" - Sanitizing data and validation tag input.")
+    msg(" - Sanitizing data and validating tag input.")
     for f in self.musicfiles:
       try:
         f.sanitize()
