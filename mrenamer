@@ -21,7 +21,7 @@
 #
 class SafeString():
   whitelist = ('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
-    'p','q','r','s','t','u','v','w','x','y','z','-','.', ' ', '0', '1', '2',
+    'p','q','r','s','t','u','v','w','x','y','z','-',' ', '0', '1', '2',
     '3', '4', '5', '6', '7', '8', '9')
   original = string = ''
 
@@ -174,6 +174,7 @@ class File(Node):
 #    - sanitize (obj)
 #
 class MusicFile(File):
+  relpath_new = ''
   artist = ''
   album = ''
   title = ''
@@ -481,16 +482,21 @@ class Collection():
 
   # Rename the music files and move them into the new structure.
   def moveMusic(self):
-    print "-- FILES --->"
-    for f in self.files:
-      print f
-    print "-- MUSICFILES --->"
-    for f in self.musicfiles:
-      print f
-    print "-- DIRS --->"
-    for d in self.directories:
-      print d
     debug("'%s' moveMusic()" % self, 1)
+
+    # Move the files to the stage tree.
+    msg(" - Moving music to fresh tree in stage directory '%s/'." % self.settings.stagedir)
+
+    #print "-- FILES --->"
+    #for f in self.files:
+      #print f
+    #print "-- MUSICFILES --->"
+    #for f in self.musicfiles:
+      #print f
+    #print "-- DIRS --->"
+    #for d in self.directories:
+      #print d
+
 
   ## HOOK IMPLEMENTATIONS ######################################################
 
@@ -561,7 +567,26 @@ class Collection():
 
   # Implementation of the sanitize hook.
   def callbackSanitize(self, node):
-    pass
+
+    # Create a dictionary with replaceable strings, our formatting arguments.
+    kwarguments = {
+      'artist': node.artist_s,
+      'album': node.album_s,
+      'title': node.title_s,
+      'ext': node.extension}
+
+    # Parse the format and set the relpath_new field to reflect the new location.
+    try:
+      node.relpath_new = self.settings.format.format(**kwarguments)
+    except KeyError, e:
+      msg("\n  ERROR: The provided format mentions a non-existing field %s.\n" % e)
+      msg("  The following fields are valid:")
+      msg("   - {artist}")
+      msg("   - {album}")
+      msg("   - {title}")
+      msg("   - {ext}")
+      msg("\n - Aborted, no files have been touched.")
+      sys.exit()
 
   # Implementation of the traverse_filter hook.
   def callbackTraverseFilter(self, node, path):
@@ -610,7 +635,7 @@ def __main_optionparser():
   parser.add_option(
     "-f", "--format",
     action="store", type="string", dest="format", metavar='F',
-    default='$artist/$album/$artist-$title.$ext',
+    default='{artist}/{album}/{artist}-{title}.{ext}',
     help="The format in which filenames will be rewritten.")
   parser.add_option(
     "-l", "--leftovers",
