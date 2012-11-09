@@ -133,12 +133,15 @@ class Node():
     self.invoke('remove', self)
 
   # Move the file system object onto a different location.
-  def move(self, dest):
+  def move(self, dest, newFileName=None):
     debug("'%s' move()" % self, self.dl)
 
     # Declare the new path and physically move the object.
     self.oldpath = self.path
-    self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
+    if newFileName != None:
+      self.path = os.path.abspath('%s/%s' % (dest.path, newFileName))
+    else:
+      self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
     if not self.dryrun:
       os.rename(self.oldpath, self.path)
 
@@ -424,7 +427,7 @@ class Collection():
       dl=2)
     self.d_stage = Directory(
       path="%s/%s" % (self.d_root.path, self.settings.stagedir),
-      #parent=self.d_root,
+      parent=self.d_root,
       dl=2)
 
     # If we run in --dry-run mode, enable it on all directory objects.
@@ -509,17 +512,24 @@ class Collection():
     debug("'%s' moveMusic()" % self, 1)
 
     # Move the files to the stage tree.
-    msg(" - Moving music to fresh tree in stage directory '%s/'." % self.settings.stagedir)
+    msg(" - Moving music to new tree in stage directory '%s/'." % self.settings.stagedir)
+    for f in self.musicfiles:
+      destination_dir  = os.path.dirname(f.relpath_new)
+      if destination_dir == '':
+        destination_dir = self.d_stage
+      else:
+        destination_dir = self.d_stage.mkdirs(destination_dir)
+      f.move(destination_dir, os.path.basename(f.relpath_new))
 
     #print "-- FILES --->"
     #for f in self.files:
       #print f
     #print "-- MUSICFILES --->"
     #for f in self.musicfiles:
-      #print f
+      #print f.path
     #print "-- DIRS --->"
     #for d in self.directories:
-      #print d
+      #print "%s (%d)" % (d, len(d.children))
 
 
   ## HOOK IMPLEMENTATIONS ######################################################
