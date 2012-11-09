@@ -437,12 +437,15 @@ class Collection():
         'move': self.callbackMove,
         'sanitize': self.callbackSanitize,
         'traverse_filter': self.callbackTraverseFilter,
+        'shell_collect': self.callbackShellCollect,
         'mkdir': self.callbackMkdir})
     self.d_leftovers = Directory(
       path="%s/%s" % (self.d_root.path, self.settings.leftoversdir),
+      hooks={'shell_collect': self.callbackShellCollect},
       dl=2)
     self.d_stage = Directory(
       path="%s/%s" % (self.d_root.path, self.settings.stagedir),
+      hooks={'shell_collect': self.callbackShellCollect},
       parent=self.d_root,
       dl=2)
 
@@ -700,6 +703,10 @@ class Collection():
       return False
     return True
 
+  # Implementation of the shell_collect hook.
+  def callbackShellCollect(self, command):
+    print command
+
   # Implementation of the mkdir hook.
   def callbackMkdir(self, node):
     pass
@@ -745,10 +752,14 @@ def __main_optionparser():
     default='__LEFTOVERS',
     help="The directory where non-music files will be moved to.")
   parser.add_option(
-    "-s", "--stagedir",
+    "-S", "--stagedir",
     action="store", type="string", dest="stagedir", metavar='S',
     default='__STAGE',
     help="Temporary directory before music hits its final spot.")
+  parser.add_option(
+    "-s", "--shell",
+    action="store_true", dest="shell", default=False,
+    help="Generate and print shell commands (implies -q and -d)")
   parser.add_option(
     "-q", "--quiet",
     action="store_true", dest="quiet", default=False,
@@ -783,6 +794,11 @@ def __main_optionvalidator(settings):
     print "ERROR: Path '%s' is not a directory!\n" % settings['options'].dir
     settings['parser'].print_help()
     sys.exit(3) # ERROR
+
+  # Enforce dry-run and quiet mode when --shell is passed.
+  if settings['options'].shell:
+    settings['options'].quiet = True
+    settings['options'].dryrun = True
 
   # De-construct the parser and arguments and return the settings object.
   del(settings['parser'])
