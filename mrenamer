@@ -628,7 +628,10 @@ class Collection():
   # Cleanup and drop some statistics!
   def finish(self):
     debug("'%s' finish()" % self, 1)
-    msg(" - DONE! Processed %d files." % len(self.musicfiles))
+    if self.settings.dryrun:
+      msg(" - DONE! Processed %d files (dry-run mode)." % len(self.musicfiles))
+    else:
+      msg(" - DONE! Processed %d files." % len(self.musicfiles))
 
   ## HOOK IMPLEMENTATIONS ######################################################
 
