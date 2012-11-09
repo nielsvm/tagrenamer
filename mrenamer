@@ -316,9 +316,10 @@ class Directory(Node):
 # Represent the collection of all found file objects within the base path.
 #
 class Collection():
-  settings = root = leftovers = None
+  d_root = d_leftovers = d_stage = None
   directories = []
   musicfiles = []
+  settings = None
   files = []
   nodes = []
   ids = []
@@ -328,29 +329,39 @@ class Collection():
     debug("'%s' __init__()" % self, 1)
     self.settings = settings
 
-    # Initialize the base music directory object.
-    self.root = Directory(self.settings.dir, self.nodeRegistrar)
+    # Initialize all directory objects: the root directory, the left-overs and stage directories.
+    self.d_root = Directory(self.settings.dir, self.nodeRegistrar)
+    self.d_leftovers = Directory("%s/%s" % (self.d_root.path, self.settings.leftoversdir), None, self.d_root, 2)
+    self.d_stage = Directory("%s/%s" % (self.d_root.path, self.settings.stagedir), None, self.d_root, 2)
 
-    # Initialize the leftovers directory and it's directory object.
-    leftoversdir = "%s/%s" % (self.root.path, self.settings.leftovers)
-    self.leftovers = Directory(leftoversdir, None, self.root, 2)
-
-    # If --dry-run was passed we enable the safe mode on both objects.
+    # If we run in --dry-run mode, enable it on all directory objects.
     if self.settings.dryrun:
-      self.root.enableDryRun()
-      self.leftovers.enableDryRun()
+      self.d_root.enableDryRun()
+      self.d_leftovers.enableDryRun()
+      self.d_stage.enableDryRun()
 
-    # Create the leftovers directory if it doesn't physically exist.
-    if not self.leftovers.exists():
-      self.leftovers.mkdir()
-      msg(" - Created directory '%s/'." % self.settings.leftovers)
+    # LEFTOVERS DIRECTORY: Clean the directory or create it.
+    if self.d_leftovers.exists():
+      self.d_leftovers.traverse()
+      if len(self.d_leftovers.children):
+        for c in self.d_leftovers.children:
+          c.remove()
+        msg(" - Leftovers directory '%s/' cleaned." % self.settings.leftoversdir)
+    else:
+      self.d_leftovers.mkdir()
+      msg(" - Leftovers directory '%s/' created." % self.settings.leftoversdir)
 
-    # Traverse the leftovers directory and delete any existing items in it.
-    self.leftovers.traverse()
-    if len(self.leftovers.children):
-      for c in self.leftovers.children:
-        c.remove()
-      msg(" - Cleaned directory '%s/'." % self.settings.leftovers)
+    # STAGE DIRECTORY: Create the directory or verify it is empty when it exists.
+    if self.d_stage.exists():
+      self.d_stage.traverse()
+      if len(self.d_stage.children) != 0:
+        msg(" - Stage directory '%s/' exist but is NOT empty. Please investigate, aborting..." % self.settings.stagedir)
+        sys.exit()
+      else:
+        msg(" - Stage directory '%s/' exists." % self.settings.stagedir)
+    else:
+      self.d_stage.mkdir()
+      msg(" - Stage directory '%s/ created'." % self.settings.stagedir)
 
   # Register a reference to any new created file system node in this collection.
   def nodeRegistrar(self, node):
@@ -370,11 +381,13 @@ class Collection():
   def traverse(self):
     debug("'%s' traverse()" % self, 1)
     msg(" - Starting file system analysis.")
-    self.root.traverse()
+    self.d_root.traverse()
 
-    # The leftovers directory is our safe haven and already has a separate root
-    # object on self.leftovers. It got scanned twice, let's remove this reference.
-    self.root.removeChild(self.leftovers)
+    # Remove our safe-harbor leftovers and stage directories as they have their
+    # own separate directory objects at respectively self.d_leftovers and
+    # self.d_stage. The removeChild() call looks up the objects and forgets them.
+    self.d_root.removeChild(self.d_leftovers)
+    self.d_root.removeChild(self.d_stage)
 
   # Extract all the meta data from the collected music files.
   def extract(self):
@@ -402,15 +415,15 @@ class Collection():
   # Move all the non-music files into the leftovers directory.
   def moveLeftovers(self):
     debug("'%s' moveLeftovers()" % self, 1)
-    msg(" - Moving non music files to '%s/'." % self.settings.leftovers)
+    msg(" - Moving non music files to '%s/'." % self.settings.leftoversdir)
 
     # Iterate trough all the files and recreate their original directory path
     # within the leftovers directory to not loose their original dir structure.
     for f in self.files:
       if os.path.dirname(f.relpath) != '':
-        destination = self.leftovers.mkdirs(os.path.dirname(f.relpath))
+        destination = self.d_leftovers.mkdirs(os.path.dirname(f.relpath))
       else:
-        destination = self.leftovers
+        destination = self.d_leftovers
       f.move(destination)
 
   # Rename the music files and move them into the new structure.
@@ -457,9 +470,14 @@ def __main_optionparser():
     help="The format in which filenames will be rewritten.")
   parser.add_option(
     "-l", "--leftovers",
-    action="store", type="string", dest="leftovers", metavar='L',
+    action="store", type="string", dest="leftoversdir", metavar='L',
     default='__LEFTOVERS',
     help="The directory where non-music files will be moved to.")
+  parser.add_option(
+    "-s", "--stagedir",
+    action="store", type="string", dest="stagedir", metavar='S',
+    default='__STAGE',
+    help="Temporary directory before music hits its final spot.")
   parser.add_option(
     "-q", "--quiet",
     action="store_true", dest="quiet", default=False,
