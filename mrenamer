@@ -625,10 +625,10 @@ class Collection():
       del self.d_leftovers
       self.d_leftovers = None
 
-    #for f in self.musicfiles:
-      #print f.path
-    #print self.d_root
-    #print self.d_stage
+  # Cleanup and drop some statistics!
+  def finish(self):
+    debug("'%s' finish()" % self, 1)
+    msg(" - DONE! Processed %d files." % len(self.musicfiles))
 
   ## HOOK IMPLEMENTATIONS ######################################################
 
@@ -941,6 +941,7 @@ def main():
     coll.moveFilesPermanently()
     coll.removeStageDirectory()
     coll.removeLeftoversDirectory()
+    coll.finish()
   except KeyboardInterrupt:
     print " Quitting, sorry..."
 
