@@ -267,6 +267,10 @@ class Directory(Node):
       dl=dl)
     self.children = []
 
+  # Format our own base representation, add the child count too.
+  def __str__(self):
+    return "%s:%s(%d)" % (self.type, self.base, len(self.children))
+
   # Enable a dry-run mode on this object and its children.
   def enableDryRun(self):
     Node.enableDryRun(self)
@@ -388,10 +392,13 @@ class Directory(Node):
     if self.parent != None:
       self.parent.removeChild(self)
 
+    # Invoke the remove hook, see main class description.
+    self.invoke('remove', self)
+
   # Move the file system object onto a different location.
   def move(self, dest):
     debug("'%s' move()" % self, self.dl)
-    raise Exception("Can not move directories yet...")
+    raise Exception("Not yet implemented...")
 
 #
 # Represent the collection of all found file objects within the base path.
@@ -507,11 +514,9 @@ class Collection():
         destination = self.d_leftovers
       f.move(destination)
 
-  # Rename the music files and move them into the new structure.
-  def moveMusic(self):
+  # Rename the music files and move them into the new structure (inside stage).
+  def moveMusicToStage(self):
     debug("'%s' moveMusic()" % self, 1)
-
-    # Move the files to the stage tree.
     msg(" - Moving music to new tree in stage directory '%s/'." % self.settings.stagedir)
     for f in self.musicfiles:
       destination_dir  = os.path.dirname(f.relpath_new)
@@ -521,15 +526,22 @@ class Collection():
         destination_dir = self.d_stage.mkdirs(destination_dir)
       f.move(destination_dir, os.path.basename(f.relpath_new))
 
-    #print "-- FILES --->"
-    #for f in self.files:
-      #print f
-    #print "-- MUSICFILES --->"
+  # Remove empty directories.
+  def removeEmptyDirectories(self):
+    debug("'%s' removeEmptyDirectories()" % self, 1)
+    msg(" - Remove empty directories (except stage and leftover directories).")
+    for c in self.d_root.children:
+      if c.type == 'Directory':
+        c.remove()
+
+  # Remove empty directories.
+  def moveFilesPermanently(self):
+    debug("'%s' moveFilesPermanently()" % self, 1)
+    #msg(" - Remove empty directories (except stage and leftover directories).")
     #for f in self.musicfiles:
       #print f.path
-    #print "-- DIRS --->"
-    #for d in self.directories:
-      #print "%s (%d)" % (d, len(d.children))
+    #print self.d_root
+    #print self.d_stage
 
 
   ## HOOK IMPLEMENTATIONS ######################################################
@@ -824,7 +836,8 @@ def main():
     coll.extract()
     coll.sanitize()
     coll.moveLeftovers()
-    coll.moveMusic()
+    coll.moveMusicToStage()
+    coll.removeEmptyDirectories()
   except KeyboardInterrupt:
     print " Quitting, sorry..."
 
