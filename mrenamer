@@ -37,9 +37,21 @@ class SafeString():
   # Filter out any garbage left.
   def filter(self):
     result = []
+    lastWasSpace = foo=False
     for char in self.string:
       for validchar in self.whitelist:
         if char == validchar:
+
+          # Prevent space duplication.
+          if char == u' ':
+            if lastWasSpace:
+              continue
+            else:
+              lastWasSpace = True
+          else:
+            lastWasSpace = False
+
+          # Append the character to the result list.
           result.append(char)
     self.string = ''.join(result)
 
