@@ -294,6 +294,11 @@ class Directory(Node):
     if self.parent != None:
       self.parent.removeChild(self)
 
+  # Move the file system object onto a different location.
+  def move(self, dest):
+    debug("'%s' move()" % self, self.debuglevel)
+    raise Exception("Can not move directories yet...")
+
 #
 # Represent the collection of all found file objects within the base path.
 #
