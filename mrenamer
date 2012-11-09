@@ -90,6 +90,11 @@ class Node():
   def enableDryRun(self):
     self.dryrun = True
 
+  # Determine whether the object really exists or not.
+  def exists(self):
+    debug("'%s' exists()" % self, self.debuglevel)
+    return os.path.exists(self.path)
+
   # Delete the file system object from disk.
   def remove(self):
     debug("'%s' remove()" % self, self.debuglevel)
@@ -173,7 +178,7 @@ class MusicFile(File):
     self.album_s = str(SafeString(self.album.strip()))
     self.title_s = str(SafeString(self.title.strip()))
 
-    # Start validating the data on field length.
+    # Start validating the data, based on field length.
     if not len(self.artist_s):
       raise ValueError(self)
     elif not len(self.album_s):
@@ -219,30 +224,33 @@ class Directory(Node):
   def traverse(self):
     self.children = []
     debug("'%s' traverse()" % self, self.debuglevel)
-    for path in os.listdir(self.path):
-      debuglevel = self.debuglevel + 1
-      path = "%s/%s" % (self.path, path)
 
-      # Perform a set of tests and load the correct class for the found child.
-      if os.path.isdir(path):
-        node = Directory(path, self.callback, self, debuglevel)
-        node.traverse()
-      elif os.path.isfile(path):
-        music_extensions = ('mp3', 'ogg', 'flac')
-        extension = path.split('.').pop()
-        if extension in music_extensions:
-          node = MusicFile(path, extension, self.callback, self, debuglevel)
+    # Only really traverse if the object exists.
+    if self.exists():
+      for path in os.listdir(self.path):
+        debuglevel = self.debuglevel + 1
+        path = "%s/%s" % (self.path, path)
+
+        # Perform a set of tests and load the correct class for the found child.
+        if os.path.isdir(path):
+          node = Directory(path, self.callback, self, debuglevel)
+          node.traverse()
+        elif os.path.isfile(path):
+          music_extensions = ('mp3', 'ogg', 'flac')
+          extension = path.split('.').pop()
+          if extension in music_extensions:
+            node = MusicFile(path, extension, self.callback, self, debuglevel)
+          else:
+            node = File(path, extension, self.callback, self, debuglevel)
         else:
-          node = File(path, extension, self.callback, self, debuglevel)
-      else:
-        node = Node(path, self.callback, self, debuglevel)
+          node = Node(path, self.callback, self, debuglevel)
 
-      # If a --dry-run policy is applied onto us; our children inherit this.
-      if self.dryrun:
-        node.enableDryRun()
+        # Enable dry run if on the node if it applies to us.
+        if self.dryrun:
+          node.enableDryRun()
 
-      # Append the child to our list of children.
-      self.children.append(node)
+        # Append the child to our list of children.
+        self.children.append(node)
 
   # Make this directory if it doesn't exist on disk yet.
   def mkdir(self):
@@ -313,6 +321,7 @@ class Collection():
   musicfiles = []
   files = []
   nodes = []
+  ids = []
 
   # Initialize the music collection.
   def __init__(self, settings):
@@ -326,15 +335,17 @@ class Collection():
     leftoversdir = "%s/%s" % (self.root.path, self.settings.leftovers)
     self.leftovers = Directory(leftoversdir, None, self.root, 2)
 
-    # If --dry-run was passed we enable the safe mode on both root objects.
+    # If --dry-run was passed we enable the safe mode on both objects.
     if self.settings.dryrun:
       self.root.enableDryRun()
       self.leftovers.enableDryRun()
 
-    # The leftovers directory is initialized, but not yet created and emptied...
-    if not os.path.exists(self.leftovers.path):
+    # Create the leftovers directory if it doesn't physically exist.
+    if not self.leftovers.exists():
       self.leftovers.mkdir()
       msg(" - Created directory '%s/'." % self.settings.leftovers)
+
+    # Traverse the leftovers directory and delete any existing items in it.
     self.leftovers.traverse()
     if len(self.leftovers.children):
       for c in self.leftovers.children:
@@ -343,6 +354,9 @@ class Collection():
 
   # Register a reference to any new created file system node in this collection.
   def nodeRegistrar(self, node):
+    if id(node) in self.ids:
+      return
+    self.ids.append(id(node))
     if node.type is 'Directory':
       self.directories.append(node)
     elif node.type is 'File':
@@ -387,7 +401,7 @@ class Collection():
 
   # Move all the non-music files into the leftovers directory.
   def moveLeftovers(self):
-    debug("'%s' move_leftovers()" % self, 1)
+    debug("'%s' moveLeftovers()" % self, 1)
     msg(" - Moving non music files to '%s/'." % self.settings.leftovers)
 
     # Iterate trough all the files and recreate their original directory path
@@ -398,6 +412,13 @@ class Collection():
       else:
         destination = self.leftovers
       f.move(destination)
+
+  # Rename the music files and move them into the new structure.
+  def moveMusic(self):
+    debug("'%s' moveMusic()" % self, 1)
+    #for f in self.musicfiles:
+      #print f.path
+    #print self.ids
 
 ## FUNCTIONS ###################################################################
 
@@ -535,6 +556,7 @@ def main():
     coll.extract()
     coll.sanitize()
     coll.moveLeftovers()
+    coll.moveMusic()
   except KeyboardInterrupt:
     print " Quitting, sorry..."
 
