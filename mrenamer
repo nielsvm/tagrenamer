@@ -139,8 +139,12 @@ class Node():
     self.invoke('remove', self)
 
   # Move the file system object onto a different location.
-  def move(self, dest, newFileName=None):
+  def move(self, dest, newFileName=None, onlyReferences=False):
     debug("'%s' move()" % self, self.dl)
+
+    # Thrown an exception when we're being moved to the same location:
+    if id(self) == id(dest):
+      raise AssertionError("Can't move '%s' to itself" % dest)
 
     # Declare the new path and physically move the object.
     self.oldpath = self.path
@@ -148,9 +152,10 @@ class Node():
       self.path = os.path.abspath('%s/%s' % (dest.path, newFileName))
     else:
       self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
-    self.shellCollect("mv -v '%s' '%s'" % (self.oldpath, self.path))
-    if not self.dryrun:
-      os.rename(self.oldpath, self.path)
+    if not onlyReferences:
+      self.shellCollect("mv -v '%s' '%s'" % (self.oldpath, self.path))
+      if not self.dryrun:
+        os.rename(self.oldpath, self.path)
 
     # Unregister ourselves at our current parent and register at new parent.
     if self.parent:
@@ -393,7 +398,7 @@ class Directory(Node):
     self.children = []
 
     # Remove the directory when it's emptied.
-    self.shellCollect("rm -v '%s'" % self.path)
+    self.shellCollect("rm -Rv '%s'" % self.path)
     if not self.dryrun:
       os.rmdir(self.path)
 
@@ -405,9 +410,40 @@ class Directory(Node):
     self.invoke('remove', self)
 
   # Move the file system object onto a different location.
-  def move(self, dest):
+  def move(self, dest, onlyReferences=False):
     debug("'%s' move()" % self, self.dl)
-    raise Exception("Not yet implemented...")
+
+    # Thrown an exception when we're being moved to the same location:
+    if id(self) == id(dest):
+      raise AssertionError("Can't move '%s' to itself" % dest)
+
+    # Declare the new path and physically move the object.
+    self.oldpath = self.path
+    self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
+    if not onlyReferences:
+      self.shellCollect("mv -v '%s' '%s'" % (self.oldpath, self.path))
+      if not self.dryrun:
+        os.rename(self.oldpath, self.path)
+
+    # Unregister ourselves at our current parent and register at new parent.
+    if self.parent:
+      self.parent.removeChild(self)
+      dest.addChild(self)
+
+    # Re-parent ourselves and update several properties.
+    self.parent = dest
+    self.base = os.path.basename(self.path)
+    self.dryrun = self.parent.dryrun
+    self.root = self.parent.root
+    self.relpath = self.path.replace('%s/' % self.root, '')
+    self.dl = self.parent.dl + 1
+
+    # Iterate our children and ensure they're moved too.
+    for c in self.children:
+      c.move(dest=self, onlyReferences=True)
+
+    # Invoke the move hook, see main class description.
+    self.invoke('move', self, dest)
 
 #
 # Represent the collection of all found file objects within the base path.
@@ -538,7 +574,7 @@ class Collection():
         destination_dir = self.d_stage.mkdirs(destination_dir)
       f.move(destination_dir, os.path.basename(f.relpath_new))
 
-  # Remove empty directories.
+  # Remove empty directories in the main music tree.
   def removeEmptyDirectories(self):
     debug("'%s' removeEmptyDirectories()" % self, 1)
     msg(" - Remove empty directories (except stage and leftover directories).")
@@ -546,15 +582,25 @@ class Collection():
       if c.type == 'Directory':
         c.remove()
 
-  # Remove empty directories.
+  # Move all files and directories from stage to the permanent spot.
   def moveFilesPermanently(self):
     debug("'%s' moveFilesPermanently()" % self, 1)
-    #msg(" - Remove empty directories (except stage and leftover directories).")
+    msg(" - Move everything from stage into the final location.")
+    for c in self.d_stage.children:
+      c.move(self.d_root)
+
+  # Remove the stage directory and object.
+  def removeStageDirectory(self):
+    debug("'%s' removeStageDirectory()" % self, 1)
+    msg(" - Deleting the temporary stage directory '%s/'." % self.settings.stagedir)
+    self.d_stage.remove()
+    del self.d_stage
+    self.d_stage = None
+
     #for f in self.musicfiles:
       #print f.path
     #print self.d_root
     #print self.d_stage
-
 
   ## HOOK IMPLEMENTATIONS ######################################################
 
@@ -864,6 +910,8 @@ def main():
     coll.moveLeftovers()
     coll.moveMusicToStage()
     coll.removeEmptyDirectories()
+    coll.moveFilesPermanently()
+    coll.removeStageDirectory()
   except KeyboardInterrupt:
     print " Quitting, sorry..."
 
