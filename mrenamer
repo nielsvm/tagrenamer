@@ -123,6 +123,7 @@ class Node():
       string = string.replace('"', '\\"')
       string = string.replace("&", "\&")
       string = string.replace('\/', '|')
+      string = string.replace('`', '\`')
       return string
 
     # Create a new arguments list and escape the values.
