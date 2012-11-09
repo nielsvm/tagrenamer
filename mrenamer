@@ -717,6 +717,17 @@ class Collection():
   # Implementation of the sanitize hook.
   def callbackSanitize(self, node):
 
+    # Define a callable to generate a file based hash.
+    def md5(filename, block_size=2**20):
+      f = open(filename)
+      md5 = hashlib.md5()
+      while True:
+        data = f.read(block_size)
+        if not data:
+          break
+        md5.update(data)
+      return md5.hexdigest()
+
     # Verify if a song with exactly the same artist, album, title wasn't
     # submitted before and abort the process if it does.
     if node.hash_s in self.hashes:
@@ -728,6 +739,15 @@ class Collection():
       msg("  Artist: '%s'" % node.artist)
       msg("  Album:  '%s'" % node.album)
       msg("  Title:  '%s'" % node.title)
+
+      # Generate two MD5 hashes, one for this file and the other one.
+      msg("\n  Generated MD5 hashes based on content:")
+      for m in self.musicfiles:
+        if node.hash_s == m.hash_s:
+          msg("   - %s: %s" % (md5(m.path), m.relpath))
+          break
+      msg("   - %s: %s" % (md5(node.path), node.relpath))
+
       msg("\n - Aborted, no files have been touched.")
       sys.exit()
     else:
