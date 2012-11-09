@@ -53,7 +53,7 @@ class SafeString():
 
           # Append the character to the result list.
           result.append(char)
-    self.string = ''.join(result)
+    self.string = ''.join(result).strip()
 
   # Return our own string representation.
   def __str__(self):
