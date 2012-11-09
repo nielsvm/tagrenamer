@@ -705,7 +705,8 @@ class Collection():
 
   # Implementation of the shell_collect hook.
   def callbackShellCollect(self, command):
-    print command
+    if self.settings.shell:
+      print command
 
   # Implementation of the mkdir hook.
   def callbackMkdir(self, node):
