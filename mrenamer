@@ -160,6 +160,9 @@ class MusicFile(File):
   artist = ''
   album = ''
   title = ''
+  artist_s = ''
+  album_s = ''
+  title_s = ''
 
   # Initialize the music file object after calling home.
   def __init__(self, path, extension, callback = None, parent = None, debuglevel = 1):
@@ -167,6 +170,7 @@ class MusicFile(File):
 
     # Reset all meta data values of this music file.
     self.artist = self.album = self.title = ''
+    self.artist_s = self.album_s = self.title_s = ''
 
   # Extract all meta data using the Tagpy library.
   def extract(self):
@@ -175,6 +179,21 @@ class MusicFile(File):
     self.artist = f.tag().artist
     self.album = f.tag().album
     self.title = f.tag().title
+
+  # Sanitize the extracted data ready for file system level usage.
+  def sanitize(self):
+    debug("'%s' sanitize()" % self, self.debuglevel)
+    self.artist_s = str(SafeString(self.artist.strip()))
+    self.album_s = str(SafeString(self.album.strip()))
+    self.title_s = str(SafeString(self.title.strip()))
+
+    # Start validating the data on field length.
+    if not len(self.artist_s):
+      raise ValueError(self)
+    elif not len(self.album_s):
+      raise ValueError(self)
+    elif not len(self.title_s):
+      raise ValueError(self)
 
 #
 # Represent a directory found on the file system.
@@ -364,6 +383,22 @@ class Collection():
     for f in self.musicfiles:
       f.extract()
 
+  # Sanitize all extracted meta data for file system usage and validate input.
+  def sanitize(self):
+    debug("'%s' sanitize()" % self, 1)
+    msg(" - Sanitizing data and validation tag input.")
+    for f in self.musicfiles:
+      try:
+        f.sanitize()
+      except ValueError:
+        msg("\n  Manually correct the tags of this file or the full album.\n")
+        msg("  File:   '%s'" % f.relpath)
+        msg("  Artist: '%s' --> '%s'" % (f.artist, f.artist_s))
+        msg("  Album:  '%s' --> '%s'" % (f.album, f.album_s))
+        msg("  Title:  '%s' --> '%s'" % (f.title, f.title_s))
+        msg("\n - Aborted, no files have been touched.")
+        sys.exit()
+
   # Move all the non-music files into the leftovers directory.
   def moveLeftovers(self):
     debug("'%s' move_leftovers()" % self, 1)
@@ -496,6 +531,7 @@ def main():
     coll = Collection(settings)
     coll.traverse()
     coll.extract()
+    coll.sanitize()
     coll.moveLeftovers()
   except KeyboardInterrupt:
     print " Quitting, sorry..."
