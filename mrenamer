@@ -112,8 +112,27 @@ class Node():
       return self.hooks[hook](*args)
 
   # Collect the shell equivalent of a file or directory action.
-  def shellCollect(self, command):
-    self.invoke('shell_collect', command)
+  def shellCollect(self, command, *args):
+
+    # Stop the call if there's no registered hook for this.
+    if 'shell_collect' not in self.hooks:
+      return
+
+    # Sub function to clean incoming argument values.
+    def escape(string):
+      string = string.replace('"', '\\"')
+      string = string.replace("&", "\&")
+      string = string.replace('\/', '|')
+      return string
+
+    # Create a new arguments list and escape the values.
+    newargs = []
+    for a in args:
+      newargs.append(escape(a))
+    args = tuple(newargs)
+
+    # Parse the command and call our shell_collect hook.
+    self.invoke('shell_collect', command.format(*newargs))
 
   # Enable a dry-run mode on this object so that no real will things happen.
   def enableDryRun(self):
@@ -127,7 +146,7 @@ class Node():
   # Delete the file system object from disk.
   def remove(self):
     debug("'%s' remove()" % self, self.dl)
-    self.shellCollect("rm -v '%s'" % self.path)
+    self.shellCollect('rm -v "{}"', self.path)
     if not self.dryrun:
       os.unlink(self.path)
 
@@ -153,7 +172,7 @@ class Node():
     else:
       self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
     if not onlyReferences:
-      self.shellCollect("mv -v '%s' '%s'" % (self.oldpath, self.path))
+      self.shellCollect('mv -v "{}" "{}"', self.oldpath, self.path)
       if not self.dryrun:
         os.rename(self.oldpath, self.path)
 
@@ -351,7 +370,7 @@ class Directory(Node):
     debug("'%s' mkdir()" % self, self.dl)
     if not self.dryrun:
       os.mkdir(self.path)
-    self.shellCollect("mkdir -v '%s'" % self.path)
+    self.shellCollect('mkdir -v "{}"', self.path)
 
     # Invoke the mkdir hook, see main class description.
     self.invoke('mkdir', self)
@@ -398,7 +417,7 @@ class Directory(Node):
     self.children = []
 
     # Remove the directory when it's emptied.
-    self.shellCollect("rm -Rv '%s'" % self.path)
+    self.shellCollect('rm -Rv "{}"', self.path)
     if not self.dryrun:
       os.rmdir(self.path)
 
@@ -421,7 +440,7 @@ class Directory(Node):
     self.oldpath = self.path
     self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
     if not onlyReferences:
-      self.shellCollect("mv -v '%s' '%s'" % (self.oldpath, self.path))
+      self.shellCollect('mv -v "{}" "{}"', self.oldpath, self.path)
       if not self.dryrun:
         os.rename(self.oldpath, self.path)
 
@@ -596,6 +615,15 @@ class Collection():
     self.d_stage.remove()
     del self.d_stage
     self.d_stage = None
+
+  # Remove the left-overs directory and object.
+  def removeLeftoversDirectory(self):
+    debug("'%s' removeLeftoversDirectory()" % self, 1)
+    if len(self.d_leftovers.children) == 0:
+      msg(" - Deleting the empty leftovers directory '%s/'." % self.settings.leftoversdir)
+      self.d_leftovers.remove()
+      del self.d_leftovers
+      self.d_leftovers = None
 
     #for f in self.musicfiles:
       #print f.path
@@ -912,6 +940,7 @@ def main():
     coll.removeEmptyDirectories()
     coll.moveFilesPermanently()
     coll.removeStageDirectory()
+    coll.removeLeftoversDirectory()
   except KeyboardInterrupt:
     print " Quitting, sorry..."
 
