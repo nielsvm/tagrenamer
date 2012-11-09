@@ -190,9 +190,11 @@ class MusicFile(File):
   artist = ''
   album = ''
   title = ''
+  hash = None
   artist_s = ''
   album_s = ''
   title_s = ''
+  hash_s = ''
 
   # Initialize the music file object after calling home.
   def __init__(self, path, extension, hooks={}, parent=None, dl=1):
@@ -230,6 +232,14 @@ class MusicFile(File):
       raise ValueError(self)
     elif not len(self.title_s):
       raise ValueError(self)
+
+    # Generate a hash from all the strings to provide a unique file identifier.
+    self.hash = hashlib.md5()
+    self.hash.update(self.artist_s)
+    self.hash.update(self.album_s)
+    self.hash.update(self.title_s)
+    self.hash.update(self.extension)
+    self.hash_s = str(self.hash.hexdigest())
 
     # Invoke the sanitize hook, see main class description.
     self.invoke('sanitize', self)
@@ -385,9 +395,11 @@ class Directory(Node):
 #
 class Collection():
   d_root = d_leftovers = d_stage = None
+  musicfiles_new_relpaths = []
   directories = []
   musicfiles = []
   settings = None
+  hashes = []
   files = []
   nodes = []
   ids = []
@@ -469,7 +481,7 @@ class Collection():
       try:
         f.sanitize()
       except ValueError:
-        msg("\n  Manually correct the tags of this file or the full album.\n")
+        msg("\n  ERROR: correct the tags of this file or its full album.\n")
         msg("  File:   '%s'" % f.relpath)
         msg("  Artist: '%s' --> '%s'" % (f.artist, f.artist_s))
         msg("  Album:  '%s' --> '%s'" % (f.album, f.album_s))
@@ -559,6 +571,19 @@ class Collection():
           index.append(n)
       self.nodes = index
 
+    # In case of a MusicFile, lets also rewrite the hash and relpath's registry.
+    if node.type is 'MusicFile':
+      musicfiles_new_relpaths = []
+      hashes = []
+      for h in self.hashes:
+        if h != node.hash_s:
+          hashes.append(h)
+      for mnr in self.musicfiles_new_relpaths:
+        if mnr != node.relpath_new:
+          musicfiles_new_relpaths.append(mnr)
+      self.hashes = hashes
+      self.musicfiles_new_relpaths = musicfiles_new_relpaths
+
   # Implementation of the move hook.
   def callbackMove(self, node, dest):
 
@@ -580,25 +605,59 @@ class Collection():
   # Implementation of the sanitize hook.
   def callbackSanitize(self, node):
 
+    # Verify if a song with exactly the same artist, album, title wasn't
+    # submitted before and abort the process if it does.
+    if node.hash_s in self.hashes:
+      msg("\n  ERROR: the following file has been identified as a duplicate!\n")
+      msg("  What this means is that we scanned a file earlier with exactly the")
+      msg("  same artist, album, title and extension. To prevent this from")
+      msg("  causing any conflicts we need you to sort this out first.\n")
+      msg("  File:   '%s'" % node.relpath)
+      msg("  Artist: '%s'" % node.artist)
+      msg("  Album:  '%s'" % node.album)
+      msg("  Title:  '%s'" % node.title)
+      msg("\n - Aborted, no files have been touched.")
+      sys.exit()
+    else:
+      self.hashes.append(node.hash_s)
+
     # Create a dictionary with replaceable strings, our formatting arguments.
     kwarguments = {
       'artist': node.artist_s,
       'album': node.album_s,
       'title': node.title_s,
+      'hash': node.hash_s,
       'ext': node.extension}
 
     # Parse the format and set the relpath_new field to reflect the new location.
     try:
       node.relpath_new = self.settings.format.format(**kwarguments)
     except KeyError, e:
-      msg("\n  ERROR: The provided format mentions a non-existing field %s.\n" % e)
+      msg("\n  ERROR: the provided format mentions a non-existing field %s.\n" % e)
       msg("  The following fields are valid:")
       msg("   - {artist}")
       msg("   - {album}")
       msg("   - {title}")
       msg("   - {ext}")
+      msg("   - {hash}")
       msg("\n - Aborted, no files have been touched.")
       sys.exit()
+
+    # Verify if a different file with exactly the same relpath_new isn't staged:
+    if node.relpath_new in self.musicfiles_new_relpaths:
+      msg("\n  ERROR: the following file has been identified as a duplicate!\n")
+      msg("  We identified that the future file path and name this item is going")
+      msg("  to be moved to has already been staged, indicating a duplicate")
+      msg("  at file name level and a file conflict we need to avoid.\n")
+      msg("  File:     '%s'" % node.relpath)
+      msg("  New path: '%s'" % node.relpath_new)
+      msg("  Artist:   '%s'" % node.artist)
+      msg("  Album:    '%s'" % node.album)
+      msg("  Title:    '%s'" % node.title)
+      msg("\n - Aborted, no files have been touched.")
+      sys.exit()
+    else:
+      self.musicfiles_new_relpaths.append(node.relpath_new)
 
   # Implementation of the traverse_filter hook.
   def callbackTraverseFilter(self, node, path):
@@ -622,11 +681,11 @@ class Collection():
 #   Void.
 def __main_import():
   try:
-    import sys, os, re, tagpy
+    import sys, os, re, hashlib, tagpy
     from unicodedata import normalize
     from datetime import datetime
     from optparse import OptionParser
-    global sys, os, re, tagpy, normalize, datetime, OptionParser
+    global sys, os, re, tagpy, hashlib, normalize, datetime, OptionParser
   except Exception, e:
     print "ERROR: %s\n\nConsider installing packages, e.g.:" % e
     print " $ apt-get install python-tagpy"
