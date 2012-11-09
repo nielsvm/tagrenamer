@@ -60,7 +60,7 @@ class Node():
   debuglevel = 1
 
   # Initialize the file-system node container
-  def __init__(self, path, callback = None, parent = None, debuglevel = 1):
+  def __init__(self, path, callback=None, parent=None, debuglevel=1):
     self.type = self.__class__.__name__
     self.path = os.path.abspath(path)
     self.base = os.path.basename(self.path)
@@ -135,8 +135,13 @@ class File(Node):
   extension = ''
 
   # Initialize the file object after calling home.
-  def __init__(self, path, extension, callback = None, parent = None, debuglevel = 1):
-    Node.__init__(self, path, callback, parent, debuglevel)
+  def __init__(self, path, extension, callback=None, parent=None, debuglevel=1):
+    Node.__init__(
+      self,
+      path=path,
+      callback=callback,
+      parent=parent,
+      debuglevel=debuglevel)
 
     # Set the extension if available.
     if '.' in self.base:
@@ -156,8 +161,14 @@ class MusicFile(File):
   title_s = ''
 
   # Initialize the music file object after calling home.
-  def __init__(self, path, extension, callback = None, parent = None, debuglevel = 1):
-    File.__init__(self, path, extension, callback, parent, debuglevel)
+  def __init__(self, path, extension, callback=None, parent=None, debuglevel=1):
+    File.__init__(
+      self,
+      path=path,
+      extension=extension,
+      callback=callback,
+      parent=parent,
+      debuglevel=debuglevel)
 
     # Reset all meta data values of this music file.
     self.artist = self.album = self.title = ''
@@ -193,8 +204,13 @@ class Directory(Node):
   children = []
 
   # Initialize the file object after calling home.
-  def __init__(self, path, callback = None, parent = None, debuglevel = 1):
-    Node.__init__(self, path, callback, parent, debuglevel)
+  def __init__(self, path, callback=None, parent=None, debuglevel=1):
+    Node.__init__(
+      self,
+      path=path,
+      callback=callback,
+      parent=parent,
+      debuglevel=debuglevel)
     self.children = []
 
   # Enable a dry-run mode on this object and its children.
@@ -233,17 +249,17 @@ class Directory(Node):
 
         # Perform a set of tests and load the correct class for the found child.
         if os.path.isdir(path):
-          node = Directory(path, self.callback, self, debuglevel)
+          node = Directory(path=path, callback=self.callback, parent=self, debuglevel=debuglevel)
           node.traverse()
         elif os.path.isfile(path):
           music_extensions = ('mp3', 'ogg', 'flac')
           extension = path.split('.').pop()
           if extension in music_extensions:
-            node = MusicFile(path, extension, self.callback, self, debuglevel)
+            node = MusicFile(path=path, extension=extension, callback=self.callback, parent=self, debuglevel=debuglevel)
           else:
-            node = File(path, extension, self.callback, self, debuglevel)
+            node = File(path=path, extension=extension, callback=self.callback, parent=self, debuglevel=debuglevel)
         else:
-          node = Node(path, self.callback, self, debuglevel)
+          node = Node(path=path, callback=self.callback, parent=self, debuglevel=debuglevel)
 
         # Enable dry run if on the node if it applies to us.
         if self.dryrun:
@@ -277,7 +293,7 @@ class Directory(Node):
     if not existingDir:
       debuglevel = self.debuglevel + 1
       npath = "%s/%s" % (self.path, base)
-      dir = Directory(npath, self.callback, self, debuglevel)
+      dir = Directory(path=npath, callback=self.callback, parent=self, debuglevel=debuglevel)
       if self.dryrun:
         dir.enableDryRun()
       dir.mkdir()
@@ -330,9 +346,17 @@ class Collection():
     self.settings = settings
 
     # Initialize all directory objects: the root directory, the left-overs and stage directories.
-    self.d_root = Directory(self.settings.dir, self.nodeRegistrar)
-    self.d_leftovers = Directory("%s/%s" % (self.d_root.path, self.settings.leftoversdir), None, self.d_root, 2)
-    self.d_stage = Directory("%s/%s" % (self.d_root.path, self.settings.stagedir), None, self.d_root, 2)
+    self.d_root = Directory(
+      path=self.settings.dir,
+      callback=self.nodeRegistrar)
+    self.d_leftovers = Directory(
+      path="%s/%s" % (self.d_root.path, self.settings.leftoversdir),
+      parent=self.d_root,
+      debuglevel=2)
+    self.d_stage = Directory(
+      path="%s/%s" % (self.d_root.path, self.settings.stagedir),
+      parent=self.d_root,
+      debuglevel=2)
 
     # If we run in --dry-run mode, enable it on all directory objects.
     if self.settings.dryrun:
