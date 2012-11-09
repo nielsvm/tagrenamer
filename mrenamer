@@ -104,22 +104,6 @@ class Node():
   def enableDryRun(self):
     self.dryrun = True
 
-  # Add a child node.
-  def addChild(self, child):
-    children = []
-    for c in self.children:
-      children.append(c)
-    children.append(child)
-    self.children = children
-
-  # Remove a child from this node.
-  def removeChild(self, child):
-    children = []
-    for c in self.children:
-      if c.path != child.path:
-        children.append(c)
-    self.children = children
-
   # Delete the file system object from disk.
   def remove(self):
     debug("'%s' remove()" % self, self.debuglevel)
@@ -209,6 +193,22 @@ class Directory(Node):
     if len(self.children):
       for c in self.children:
         c.enableDryRun()
+
+  # Add a child node.
+  def addChild(self, child):
+    children = []
+    for c in self.children:
+      children.append(c)
+    children.append(child)
+    self.children = children
+
+  # Remove a child from this node.
+  def removeChild(self, child):
+    children = []
+    for c in self.children:
+      if c.path != child.path:
+        children.append(c)
+    self.children = children
 
   # Traverse into subdirectories and load our children.
   def traverse(self):
