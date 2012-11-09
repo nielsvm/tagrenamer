@@ -92,7 +92,7 @@ class Node():
 
   # Invoke the given hook when they have been registered at object construction.
   def invoke(self, hook, *args):
-    if len(self.hooks) is 0:
+    if len(self.hooks) == 0:
       return
     if hook in self.hooks:
       return self.hooks[hook](*args)
@@ -395,11 +395,10 @@ class Collection():
         'mkdir': self.callbackMkdir})
     self.d_leftovers = Directory(
       path="%s/%s" % (self.d_root.path, self.settings.leftoversdir),
-      parent=self.d_root,
       dl=2)
     self.d_stage = Directory(
       path="%s/%s" % (self.d_root.path, self.settings.stagedir),
-      parent=self.d_root,
+      #parent=self.d_root,
       dl=2)
 
     # If we run in --dry-run mode, enable it on all directory objects.
@@ -465,8 +464,9 @@ class Collection():
     debug("'%s' moveLeftovers()" % self, 1)
     msg(" - Moving non music files to '%s/'." % self.settings.leftoversdir)
 
-    # Iterate trough all the files and recreate their original directory path
-    # within the leftovers directory to not loose their original dir structure.
+    # Iterate the files - which ain't music - and relocate them to the left-overs
+    # directory while recreating the original directory structure. After this our
+    # self.files index will be empty as they're disregarded from our index.
     for f in self.files:
       if os.path.dirname(f.relpath) != '':
         destination = self.d_leftovers.mkdirs(os.path.dirname(f.relpath))
@@ -476,6 +476,15 @@ class Collection():
 
   # Rename the music files and move them into the new structure.
   def moveMusic(self):
+    print "-- FILES --->"
+    for f in self.files:
+      print f
+    print "-- MUSICFILES --->"
+    for f in self.musicfiles:
+      print f
+    print "-- DIRS --->"
+    for d in self.directories:
+      print d
     debug("'%s' moveMusic()" % self, 1)
 
   ## HOOK IMPLEMENTATIONS ######################################################
@@ -494,13 +503,56 @@ class Collection():
     else:
       self.nodes.append(node)
 
-  # Implementation of the remove hook.
+  # Implementation of the remove hook - remove the object from our music index.
   def callbackRemove(self, node):
-    pass
+
+    # Rewrite the ids list - without the given node.
+    ids = []
+    for i in self.ids:
+      if i != id(node):
+        ids.append(i)
+    self.ids = ids
+
+    # Rewrite any of the trees to forget the object.
+    index = []
+    if node.type is 'Directory':
+      for d in self.directories:
+        if id(d) != id(node):
+          index.append(d)
+      self.directories = index
+    elif node.type is 'File':
+      for f in self.files:
+        if id(f) != id(node):
+          index.append(f)
+      self.files = index
+    elif node.type is 'MusicFile':
+      for f in self.musicfiles:
+        if id(f) != id(node):
+          index.append(f)
+      self.musicfiles = index
+    else:
+      for n in self.nodes:
+        if id(n) != id(node):
+          index.append(n)
+      self.nodes = index
 
   # Implementation of the move hook.
   def callbackMove(self, node, dest):
-    pass
+
+    # Detect if the object being moved - for instance a left over file - goes
+    # outside of our index, and forget about it if it does.
+    if self.callbackMoveIsDestinationUnknown(dest):
+      self.callbackRemove(node)
+
+  # Test if the destination or any of its parents aren't in our collection index.
+  def callbackMoveIsDestinationUnknown(self, dest):
+    if id(dest) in self.ids:
+      return False
+    else:
+      if dest.parent is not None:
+        return self.callbackMoveIsDestinationUnknown(dest.parent)
+      else:
+        return True
 
   # Implementation of the sanitize hook.
   def callbackSanitize(self, node):
