@@ -43,6 +43,7 @@ class SafeString():
           result.append(char)
     self.string = ''.join(result)
 
+  # Return our own string representation.
   def __str__(self):
     return self.string
 
@@ -380,8 +381,8 @@ class Collection():
 
   # Initialize the music collection.
   def __init__(self, settings):
-    debug("'%s' __init__()" % self, 1)
     self.settings = settings
+    debug("'%s' __init__()" % self, 1)
 
     # Initialize all directory objects: the root directory, the left-overs and stage directories.
     self.d_root = Directory(
@@ -429,6 +430,10 @@ class Collection():
     else:
       self.d_stage.mkdir()
       msg(" - Stage directory '%s/ created'." % self.settings.stagedir)
+
+  # Format our own base representation.
+  def __str__(self):
+    return "Collection:%s" % self.settings.dir
 
   # Traverse the base path where the music resides in and pass our registrar.
   def traverse(self):
