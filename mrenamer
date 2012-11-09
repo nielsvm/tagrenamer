@@ -49,6 +49,11 @@ class SafeString():
 #
 # Represent any file, directory or other reference found on the file system.
 #
+#   Provided hooks:
+#    - init (obj)
+#    - remove (obj)
+#    - move (obj, dest)
+#
 class Node():
   dl = 1 # Short for debuglevel.
   type = ''
@@ -78,19 +83,19 @@ class Node():
     self.dl = self.dl + dl
     debug("'%s' __init__()" % self, self.dl)
 
-    # Invoke the init hook, arguments: node.
-    self.__hook('init', self)
+    # Invoke the init hook, see main class description.
+    self.invoke('init', self)
 
   # Format our own base representation.
   def __str__(self):
     return "%s:%s" % (self.type, self.base)
 
   # Invoke the given hook when they have been registered at object construction.
-  def __hook(self, hook, *args):
+  def invoke(self, hook, *args):
     if len(self.hooks) is 0:
       return
     if hook in self.hooks:
-      self.hooks[hook](*args)
+      return self.hooks[hook](*args)
 
   # Enable a dry-run mode on this object so that no real will things happen.
   def enableDryRun(self):
@@ -110,6 +115,9 @@ class Node():
     # Remove this instance from the parents list of children.
     if self.parent != None:
       self.parent.removeChild(self)
+
+    # Invoke the remove hook, see main class description.
+    self.invoke('remove', self)
 
   # Move the file system object onto a different location.
   def move(self, dest):
@@ -134,6 +142,9 @@ class Node():
     self.relpath = self.path.replace('%s/' % self.root, '')
     self.dl = self.parent.dl + 1
 
+    # Invoke the move hook, see main class description.
+    self.invoke('move', self, dest)
+
 #
 # Represent an ordinary file found on the file system.
 #
@@ -157,6 +168,9 @@ class File(Node):
 
 #
 # Represent a file of a known music file format found on the file system.
+#
+#   Provided hooks:
+#    - sanitize (obj)
 #
 class MusicFile(File):
   artist = ''
@@ -203,8 +217,15 @@ class MusicFile(File):
     elif not len(self.title_s):
       raise ValueError(self)
 
+    # Invoke the sanitize hook, see main class description.
+    self.invoke('sanitize', self)
+
 #
 # Represent a directory found on the file system.
+#
+#   Provided hooks:
+#    - traverse_filter (obj, path), return True/False
+#    - mkdir (obj)
 #
 class Directory(Node):
   children = []
@@ -253,6 +274,14 @@ class Directory(Node):
         dl = self.dl + 1
         path = "%s/%s" % (self.path, path)
 
+        # Invoke the traverse_filter hook (see main class description) and
+        # determine if we should include this object (True) or not (False).
+        filter_outcome = self.invoke('traverse_filter', self, path)
+        if filter_outcome is not None:
+          if filter_outcome == False:
+            debug("'%s' traverse(): skipping %s" % (self, path), dl)
+            continue
+
         # Perform a set of tests and load the correct class for the found child.
         if os.path.isdir(path):
           node = Directory(path=path, hooks=self.hooks, parent=self, dl=dl)
@@ -279,6 +308,9 @@ class Directory(Node):
     debug("'%s' mkdir()" % self, self.dl)
     if not self.dryrun:
       os.mkdir(self.path)
+
+    # Invoke the mkdir hook, see main class description.
+    self.invoke('mkdir', self)
 
   # Make multiple directories at once and assure that a path exists.
   def mkdirs(self, path):
@@ -354,7 +386,13 @@ class Collection():
     # Initialize all directory objects: the root directory, the left-overs and stage directories.
     self.d_root = Directory(
       path=self.settings.dir,
-      hooks={'init': self.nodeRegistrar})
+      hooks={
+        'init': self.callbackInit,
+        'remove': self.callbackRemove,
+        'move': self.callbackMove,
+        'sanitize': self.callbackSanitize,
+        'traverse_filter': self.callbackTraverseFilter,
+        'mkdir': self.callbackMkdir})
     self.d_leftovers = Directory(
       path="%s/%s" % (self.d_root.path, self.settings.leftoversdir),
       parent=self.d_root,
@@ -393,31 +431,11 @@ class Collection():
       self.d_stage.mkdir()
       msg(" - Stage directory '%s/ created'." % self.settings.stagedir)
 
-  # Register a reference to any new created file system node in this collection.
-  def nodeRegistrar(self, node):
-    if id(node) in self.ids:
-      return
-    self.ids.append(id(node))
-    if node.type is 'Directory':
-      self.directories.append(node)
-    elif node.type is 'File':
-      self.files.append(node)
-    elif node.type is 'MusicFile':
-      self.musicfiles.append(node)
-    else:
-      self.nodes.append(node)
-
   # Traverse the base path where the music resides in and pass our registrar.
   def traverse(self):
     debug("'%s' traverse()" % self, 1)
     msg(" - Starting file system analysis.")
     self.d_root.traverse()
-
-    # Remove our safe-harbor leftovers and stage directories as they have their
-    # own separate directory objects at respectively self.d_leftovers and
-    # self.d_stage. The removeChild() call looks up the objects and forgets them.
-    self.d_root.removeChild(self.d_leftovers)
-    self.d_root.removeChild(self.d_stage)
 
   # Extract all the meta data from the collected music files.
   def extract(self):
@@ -459,9 +477,48 @@ class Collection():
   # Rename the music files and move them into the new structure.
   def moveMusic(self):
     debug("'%s' moveMusic()" % self, 1)
-    #for f in self.musicfiles:
-      #print f.path
-    #print self.ids
+
+  ## HOOK IMPLEMENTATIONS ######################################################
+
+  # Register a reference to any new created file system node in this collection.
+  def callbackInit(self, node):
+    if id(node) in self.ids:
+      return
+    self.ids.append(id(node))
+    if node.type is 'Directory':
+      self.directories.append(node)
+    elif node.type is 'File':
+      self.files.append(node)
+    elif node.type is 'MusicFile':
+      self.musicfiles.append(node)
+    else:
+      self.nodes.append(node)
+
+  # Implementation of the remove hook.
+  def callbackRemove(self, node):
+    pass
+
+  # Implementation of the move hook.
+  def callbackMove(self, node, dest):
+    pass
+
+  # Implementation of the sanitize hook.
+  def callbackSanitize(self, node):
+    pass
+
+  # Implementation of the traverse_filter hook.
+  def callbackTraverseFilter(self, node, path):
+
+    # Skip including the leftovers and stage directories within the music tree.
+    if path == self.d_leftovers.path:
+      return False
+    if path == self.d_stage.path:
+      return False
+    return True
+
+  # Implementation of the mkdir hook.
+  def callbackMkdir(self, node):
+    pass
 
 ## FUNCTIONS ###################################################################
 
