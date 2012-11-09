@@ -65,8 +65,9 @@ class SafeString():
 #
 class Node():
   type = ''
-  path = ''
+  path = relpath = ''
   base = ''
+  root = ''
   dryrun = False
   parent = None
   callback = None
@@ -79,6 +80,14 @@ class Node():
     self.base = os.path.basename(self.path)
     self.dryrun = False
     self.parent = parent
+    if parent == None:
+      if os.path.isdir(self.path):
+        self.root = self.path
+      else:
+        self.root = os.path.dirname(self.path)
+    else:
+      self.root = self.parent.root
+    self.relpath = self.path.replace('%s/' % self.root, '')
     self.debuglevel = self.debuglevel + debuglevel
     debug("'%s' __init__()" % self, self.debuglevel)
 
@@ -94,6 +103,14 @@ class Node():
   # Enable a dry-run mode on this object so that no real will things happen.
   def enableDryRun(self):
     self.dryrun = True
+
+  # Add a child node.
+  def addChild(self, child):
+    children = []
+    for c in self.children:
+      children.append(c)
+    children.append(child)
+    self.children = children
 
   # Remove a child from this node.
   def removeChild(self, child):
@@ -112,6 +129,29 @@ class Node():
     # Remove this instance from the parents list of children.
     if self.parent != None:
       self.parent.removeChild(self)
+
+  # Move the file system object onto a different location.
+  def move(self, dest):
+    debug("'%s' move()" % self, self.debuglevel)
+
+    # Declare the new path and physically move the object.
+    self.oldpath = self.path
+    self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
+    if not self.dryrun:
+      os.rename(self.oldpath, self.path)
+
+    # Unregister ourselves at our current parent and register at new parent.
+    if self.parent:
+      self.parent.removeChild(self)
+      dest.addChild(self)
+
+    # Re-parent ourselves and update several properties.
+    self.parent = dest
+    self.base = os.path.basename(self.path)
+    self.dryrun = self.parent.dryrun
+    self.root = self.parent.root
+    self.relpath = self.path.replace('%s/' % self.root, '')
+    self.debuglevel = self.parent.debuglevel + 1
 
 #
 # Represent an ordinary file found on the file system.
@@ -234,7 +274,8 @@ class Directory(Node):
 
     # Let the fresh directory object recurse into itself.
     if len(path):
-      dir.mkdirs('/'.join(path))
+      return dir.mkdirs('/'.join(path))
+    return dir
 
   # Delete this directory and it's siblings from disk.
   def remove(self):
@@ -321,12 +362,16 @@ class Collection():
   # Move all the non-music files into the leftovers directory.
   def moveLeftovers(self):
     debug("'%s' move_leftovers()" % self, 1)
-    self.leftovers.mkdirs('a/b/c/d/e/f/g/h/i/j/k')
-    self.leftovers.mkdirs('a/aap/noot/mies')
-    self.leftovers.mkdirs('a/aap/noot/bar/fu/baz')
-    #msg(" - Moving non music files to '%s/'." % self.settings.leftovers)
+    msg(" - Moving non music files to '%s/'." % self.settings.leftovers)
 
-
+    # Iterate trough all the files and recreate their original directory path
+    # within the leftovers directory to not loose their original dir structure.
+    for f in self.files:
+      if os.path.dirname(f.relpath) != '':
+        destination = self.leftovers.mkdirs(os.path.dirname(f.relpath))
+      else:
+        destination = self.leftovers
+      f.move(destination)
 
 ## FUNCTIONS ###################################################################
 
@@ -447,10 +492,8 @@ def main():
     coll.traverse()
     coll.extract()
     coll.moveLeftovers()
-
-    #__main_testinvocation(op['options'], pool, paths)
   except KeyboardInterrupt:
-    print " Sorry, quitting..."
+    print " Quitting, sorry..."
 
 ## MAIN SCRIPT INVOCATION ######################################################
 main()
