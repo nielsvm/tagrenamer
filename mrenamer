@@ -50,17 +50,17 @@ class SafeString():
 # Represent any file, directory or other reference found on the file system.
 #
 class Node():
+  dl = 1 # Short for debuglevel.
   type = ''
   path = relpath = ''
   base = ''
   root = ''
+  hooks = {}
   dryrun = False
   parent = None
-  callback = None
-  dl = 1 # Short for debuglevel.
 
   # Initialize the file-system node container
-  def __init__(self, path, callback=None, parent=None, dl=1):
+  def __init__(self, path, hooks={}, parent=None, dl=1):
     self.type = self.__class__.__name__
     self.path = os.path.abspath(path)
     self.base = os.path.basename(self.path)
@@ -73,18 +73,24 @@ class Node():
         self.root = os.path.dirname(self.path)
     else:
       self.root = self.parent.root
+    self.hooks=hooks
     self.relpath = self.path.replace('%s/' % self.root, '')
     self.dl = self.dl + dl
     debug("'%s' __init__()" % self, self.dl)
 
-    # Pass ourselves on to the given callback (if provided).
-    if callback != None:
-      self.callback = callback
-      callback(self)
+    # Invoke the init hook, arguments: node.
+    self.__hook('init', self)
 
   # Format our own base representation.
   def __str__(self):
     return "%s:%s" % (self.type, self.base)
+
+  # Invoke the given hook when they have been registered at object construction.
+  def __hook(self, hook, *args):
+    if len(self.hooks) is 0:
+      return
+    if hook in self.hooks:
+      self.hooks[hook](*args)
 
   # Enable a dry-run mode on this object so that no real will things happen.
   def enableDryRun(self):
@@ -135,11 +141,11 @@ class File(Node):
   extension = ''
 
   # Initialize the file object after calling home.
-  def __init__(self, path, extension, callback=None, parent=None, dl=1):
+  def __init__(self, path, extension, hooks={}, parent=None, dl=1):
     Node.__init__(
       self,
       path=path,
-      callback=callback,
+      hooks=hooks,
       parent=parent,
       dl=dl)
 
@@ -161,12 +167,12 @@ class MusicFile(File):
   title_s = ''
 
   # Initialize the music file object after calling home.
-  def __init__(self, path, extension, callback=None, parent=None, dl=1):
+  def __init__(self, path, extension, hooks={}, parent=None, dl=1):
     File.__init__(
       self,
       path=path,
       extension=extension,
-      callback=callback,
+      hooks=hooks,
       parent=parent,
       dl=dl)
 
@@ -204,11 +210,11 @@ class Directory(Node):
   children = []
 
   # Initialize the file object after calling home.
-  def __init__(self, path, callback=None, parent=None, dl=1):
+  def __init__(self, path, hooks={}, parent=None, dl=1):
     Node.__init__(
       self,
       path=path,
-      callback=callback,
+      hooks=hooks,
       parent=parent,
       dl=dl)
     self.children = []
@@ -249,17 +255,17 @@ class Directory(Node):
 
         # Perform a set of tests and load the correct class for the found child.
         if os.path.isdir(path):
-          node = Directory(path=path, callback=self.callback, parent=self, dl=dl)
+          node = Directory(path=path, hooks=self.hooks, parent=self, dl=dl)
           node.traverse()
         elif os.path.isfile(path):
           music_extensions = ('mp3', 'ogg', 'flac')
           extension = path.split('.').pop()
           if extension in music_extensions:
-            node = MusicFile(path=path, extension=extension, callback=self.callback, parent=self, dl=dl)
+            node = MusicFile(path=path, extension=extension, hooks=self.hooks, parent=self, dl=dl)
           else:
-            node = File(path=path, extension=extension, callback=self.callback, parent=self, dl=dl)
+            node = File(path=path, extension=extension, hooks=self.hooks, parent=self, dl=dl)
         else:
-          node = Node(path=path, callback=self.callback, parent=self, dl=dl)
+          node = Node(path=path, hooks=self.hooks, parent=self, dl=dl)
 
         # Enable dry run if on the node if it applies to us.
         if self.dryrun:
@@ -293,7 +299,7 @@ class Directory(Node):
     if not existingDir:
       dl = self.dl + 1
       npath = "%s/%s" % (self.path, base)
-      dir = Directory(path=npath, callback=self.callback, parent=self, dl=dl)
+      dir = Directory(path=npath, hooks=self.hooks, parent=self, dl=dl)
       if self.dryrun:
         dir.enableDryRun()
       dir.mkdir()
@@ -348,7 +354,7 @@ class Collection():
     # Initialize all directory objects: the root directory, the left-overs and stage directories.
     self.d_root = Directory(
       path=self.settings.dir,
-      callback=self.nodeRegistrar)
+      hooks={'init': self.nodeRegistrar})
     self.d_leftovers = Directory(
       path="%s/%s" % (self.d_root.path, self.settings.leftoversdir),
       parent=self.d_root,
