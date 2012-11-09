@@ -66,6 +66,7 @@ class SafeString():
 #    - init (obj)
 #    - remove (obj)
 #    - move (obj, dest)
+#    - shell_collect (command)
 #
 class Node():
   dl = 1 # Short for debuglevel.
@@ -110,6 +111,10 @@ class Node():
     if hook in self.hooks:
       return self.hooks[hook](*args)
 
+  # Collect the shell equivalent of a file or directory action.
+  def shellCollect(self, command):
+    self.invoke('shell_collect', command)
+
   # Enable a dry-run mode on this object so that no real will things happen.
   def enableDryRun(self):
     self.dryrun = True
@@ -122,6 +127,7 @@ class Node():
   # Delete the file system object from disk.
   def remove(self):
     debug("'%s' remove()" % self, self.dl)
+    self.shellCollect("rm -v '%s'" % self.path)
     if not self.dryrun:
       os.unlink(self.path)
 
@@ -142,6 +148,7 @@ class Node():
       self.path = os.path.abspath('%s/%s' % (dest.path, newFileName))
     else:
       self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
+    self.shellCollect("mv -v '%s' '%s'" % (self.oldpath, self.path))
     if not self.dryrun:
       os.rename(self.oldpath, self.path)
 
@@ -339,6 +346,7 @@ class Directory(Node):
     debug("'%s' mkdir()" % self, self.dl)
     if not self.dryrun:
       os.mkdir(self.path)
+    self.shellCollect("mkdir -v '%s'" % self.path)
 
     # Invoke the mkdir hook, see main class description.
     self.invoke('mkdir', self)
@@ -385,6 +393,7 @@ class Directory(Node):
     self.children = []
 
     # Remove the directory when it's emptied.
+    self.shellCollect("rm -v '%s'" % self.path)
     if not self.dryrun:
       os.rmdir(self.path)
 
