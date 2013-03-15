@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# mrenamer - Music file renamer
+# tagrenamer - Music file renamer
 #
 # @description
 #  This script is a one-purpose rewriter for trees with music files. It iterates
