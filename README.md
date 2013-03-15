@@ -54,11 +54,11 @@ beginning or trailing spaces and omit any character that could be dangerous for
 your file system.
 
 #### Fields explained
-- **{artist}** '*the rolling stones*'
-- **{album}** '*classic hits*'
-- **{title}** '*satisfaction*'
-- **{hash} ** '*feda09b72be7cba338dd421ba8f92442*' (unique combination of all fields)
-- **{ext}** '*mp3*'
+- **{artist}** ' *the rolling stones* '
+- **{album}** ' *classic hits* '
+- **{title}** ' *satisfaction* '
+- **{hash}** ' *feda09b72be7cba338dd421ba8f92442* ' (unique combination of all fields)
+- **{ext}** ' *mp3* '
 
 #### Default behavior: {artist}/{album}/{artist}-{title}.{ext}
     rowwen heze/
