@@ -37,7 +37,7 @@ class SafeString():
   # Filter out any garbage left.
   def filter(self):
     result = []
-    lastWasSpace = foo=False
+    lastWasSpace = False
     for char in self.string:
       for validchar in self.whitelist:
         if char == validchar:
