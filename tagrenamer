@@ -350,7 +350,7 @@ class Directory(Node):
           node = Directory(path=path, hooks=self.hooks, parent=self, dl=dl)
           node.traverse()
         elif os.path.isfile(path):
-          music_extensions = ('mp3', 'ogg', 'flac')
+          music_extensions = ('mp3', 'MP3', 'ogg', 'OGG', 'flac', 'FLAC')
           extension = path.split('.').pop()
           if extension in music_extensions:
             node = MusicFile(path=path, extension=extension, hooks=self.hooks, parent=self, dl=dl)
@@ -759,7 +759,7 @@ class Collection():
       'album': node.album_s,
       'title': node.title_s,
       'hash': node.hash_s,
-      'ext': node.extension}
+      'ext': node.extension.lower()}
 
     # Parse the format and set the relpath_new field to reflect the new location.
     try:
