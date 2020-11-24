@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 #
 # tagrenamer - Music file renamer
@@ -843,7 +843,7 @@ def __main_optionparser():
   parser.add_option(
     "-f", "--format",
     action="store", type="string", dest="format", metavar='F',
-    default='{artist}/{album}/{artist}-{title}.{ext}',
+    default='{artist}/{album}/{artist}-{hash}.{ext}',
     help="The format in which filenames will be rewritten.")
   parser.add_option(
     "-l", "--leftovers",
