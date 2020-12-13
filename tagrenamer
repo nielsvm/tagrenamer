@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 #
 # tagrenamer - Music file renamer
 #
@@ -14,50 +15,56 @@
 #  Niels van Mourik <niels@nielsvm.org>
 #
 
+# pylint: disable=C0115 # missing-class-docstring
+# pylint: disable=C0103 # invalid-name
+# pylint: disable=C0116 # missing-function-docstring
+# pylint: disable=R0913 # too-many-arguments
+# pylint: disable=R0912 # too-many-branches
+
 ## CLASSES #####################################################################
 
 #
 # Translate a string into a absolutely safe file system friendly representation.
 #
 class SafeString():
-  whitelist = ('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
-    'p','q','r','s','t','u','v','w','x','y','z','-',' ', '0', '1', '2',
-    '3', '4', '5', '6', '7', '8', '9')
-  original = string = ''
+    whitelist = ('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
+                 'p','q','r','s','t','u','v','w','x','y','z','-',' ', '0', '1',
+                 '2', '3', '4', '5', '6', '7', '8', '9')
+    original = string = ''
 
-  # Initialize the string object.
-  def __init__(self, string):
-    string = unicode(string)
-    self.original = string
-    self.string = string.lower()
-    decomposed = normalize("NFKD", self.string)
-    self.string = ''.join(c for c in decomposed if ord(c)<0x7f)
-    self.filter()
+    # Initialize the string object.
+    def __init__(self, string):
+        string = unicode(string)
+        self.original = string
+        self.string = string.lower()
+        decomposed = normalize("NFKD", self.string)
+        self.string = ''.join(c for c in decomposed if ord(c)<0x7f)
+        self.filter()
 
-  # Filter out any garbage left.
-  def filter(self):
-    result = []
-    lastWasSpace = False
-    for char in self.string:
-      for validchar in self.whitelist:
-        if char == validchar:
+    # Filter out any garbage left.
+    def filter(self):
+        result = []
+        lastWasSpace = False
+        for char in self.string:
+            for validchar in self.whitelist:
+                if char == validchar:
 
-          # Prevent space duplication.
-          if char == u' ':
-            if lastWasSpace:
-              continue
-            else:
-              lastWasSpace = True
-          else:
-            lastWasSpace = False
+                    # Prevent space duplication.
+                    if char == u' ':
+                        if lastWasSpace:
+                            continue
+                        else:
+                            lastWasSpace = True
+                    else:
+                        lastWasSpace = False
 
-          # Append the character to the result list.
-          result.append(char)
-    self.string = ''.join(result).strip()
+                    # Append the character to the result list.
+                    result.append(char)
+        self.string = ''.join(result).strip()
 
-  # Return our own string representation.
-  def __str__(self):
-    return self.string
+    # Return our own string representation.
+    def __str__(self):
+        return self.string
 
 #
 # Represent any file, directory or other reference found on the file system.
@@ -69,150 +76,150 @@ class SafeString():
 #    - shell_collect (command)
 #
 class Node():
-  dl = 1 # Short for debuglevel.
-  type = ''
-  path = relpath = ''
-  base = ''
-  root = ''
-  hooks = {}
-  dryrun = False
-  parent = None
+    dl = 1 # Short for debuglevel.
+    type = ''
+    path = relpath = ''
+    base = ''
+    root = ''
+    hooks = {}
+    dryrun = False
+    parent = None
 
-  # Initialize the file-system node container
-  def __init__(self, path, hooks={}, parent=None, dl=1):
-    self.type = self.__class__.__name__
-    self.path = os.path.abspath(path)
-    self.base = os.path.basename(self.path)
-    self.dryrun = False
-    self.parent = parent
-    if parent == None:
-      if os.path.isdir(self.path):
-        self.root = self.path
-      else:
-        self.root = os.path.dirname(self.path)
-    else:
-      self.root = self.parent.root
-    self.hooks=hooks
-    self.relpath = self.path.replace('%s/' % self.root, '')
-    self.dl = self.dl + dl
-    debug("'%s' __init__()" % self, self.dl)
+    # Initialize the file-system node container
+    def __init__(self, path, hooks={}, parent=None, dl=1):
+        self.type = self.__class__.__name__
+        self.path = os.path.abspath(path)
+        self.base = os.path.basename(self.path)
+        self.dryrun = False
+        self.parent = parent
+        if parent == None:
+            if os.path.isdir(self.path):
+                self.root = self.path
+            else:
+                self.root = os.path.dirname(self.path)
+        else:
+            self.root = self.parent.root
+        self.hooks=hooks
+        self.relpath = self.path.replace('%s/' % self.root, '')
+        self.dl = self.dl + dl
+        debug("'%s' __init__()" % self, self.dl)
 
-    # Invoke the init hook, see main class description.
-    self.invoke('init', self)
+        # Invoke the init hook, see main class description.
+        self.invoke('init', self)
 
-  # Format our own base representation.
-  def __str__(self):
-    return "%s:%s" % (self.type, self.base)
+    # Format our own base representation.
+    def __str__(self):
+        return "%s:%s" % (self.type, self.base)
 
-  # Invoke the given hook when they have been registered at object construction.
-  def invoke(self, hook, *args):
-    if len(self.hooks) == 0:
-      return
-    if hook in self.hooks:
-      return self.hooks[hook](*args)
+    # Invoke the given hook when they have been registered at object construction.
+    def invoke(self, hook, *args):
+        if len(self.hooks) == 0:
+            return
+        if hook in self.hooks:
+            return self.hooks[hook](*args)
 
-  # Collect the shell equivalent of a file or directory action.
-  def shellCollect(self, command, *args):
+    # Collect the shell equivalent of a file or directory action.
+    def shellCollect(self, command, *args):
 
-    # Stop the call if there's no registered hook for this.
-    if 'shell_collect' not in self.hooks:
-      return
+        # Stop the call if there's no registered hook for this.
+        if 'shell_collect' not in self.hooks:
+            return
 
-    # Sub function to clean incoming argument values.
-    def escape(string):
-      string = string.replace('"', '\\"')
-      string = string.replace("&", "\&")
-      string = string.replace('\/', '|')
-      string = string.replace('`', '\`')
-      return string
+        # Sub function to clean incoming argument values.
+        def escape(string):
+            string = string.replace('"', '\\"')
+            string = string.replace("&", "\&")
+            string = string.replace('\/', '|')
+            string = string.replace('`', '\`')
+            return string
 
-    # Create a new arguments list and escape the values.
-    newargs = []
-    for a in args:
-      newargs.append(escape(a))
-    args = tuple(newargs)
+        # Create a new arguments list and escape the values.
+        newargs = []
+        for a in args:
+            newargs.append(escape(a))
+        args = tuple(newargs)
 
-    # Parse the command and call our shell_collect hook.
-    self.invoke('shell_collect', command.format(*newargs))
+        # Parse the command and call our shell_collect hook.
+        self.invoke('shell_collect', command.format(*newargs))
 
-  # Enable a dry-run mode on this object so that no real will things happen.
-  def enableDryRun(self):
-    self.dryrun = True
+    # Enable a dry-run mode on this object so that no real will things happen.
+    def enableDryRun(self):
+        self.dryrun = True
 
-  # Determine whether the object really exists or not.
-  def exists(self):
-    debug("'%s' exists()" % self, self.dl)
-    return os.path.exists(self.path)
+    # Determine whether the object really exists or not.
+    def exists(self):
+        debug("'%s' exists()" % self, self.dl)
+        return os.path.exists(self.path)
 
-  # Delete the file system object from disk.
-  def remove(self):
-    debug("'%s' remove()" % self, self.dl)
-    self.shellCollect('rm -v "{}"', self.path)
-    if not self.dryrun:
-      os.unlink(self.path)
+    # Delete the file system object from disk.
+    def remove(self):
+        debug("'%s' remove()" % self, self.dl)
+        self.shellCollect('rm -v "{}"', self.path)
+        if not self.dryrun:
+            os.unlink(self.path)
 
-    # Remove this instance from the parents list of children.
-    if self.parent != None:
-      self.parent.removeChild(self)
+        # Remove this instance from the parents list of children.
+        if self.parent != None:
+            self.parent.removeChild(self)
 
-    # Invoke the remove hook, see main class description.
-    self.invoke('remove', self)
+        # Invoke the remove hook, see main class description.
+        self.invoke('remove', self)
 
-  # Move the file system object onto a different location.
-  def move(self, dest, newFileName=None, onlyReferences=False):
-    debug("'%s' move()" % self, self.dl)
+    # Move the file system object onto a different location.
+    def move(self, dest, newFileName=None, onlyReferences=False):
+        debug("'%s' move()" % self, self.dl)
 
-    # Thrown an exception when we're being moved to the same location:
-    if id(self) == id(dest):
-      raise AssertionError("Can't move '%s' to itself" % dest)
+        # Thrown an exception when we're being moved to the same location:
+        if id(self) == id(dest):
+            raise AssertionError("Can't move '%s' to itself" % dest)
 
-    # Declare the new path and physically move the object.
-    self.oldpath = self.path
-    if newFileName != None:
-      self.path = os.path.abspath('%s/%s' % (dest.path, newFileName))
-    else:
-      self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
-    if not onlyReferences:
-      self.shellCollect('mv -v "{}" "{}"', self.oldpath, self.path)
-      if not self.dryrun:
-        os.rename(self.oldpath, self.path)
+        # Declare the new path and physically move the object.
+        self.oldpath = self.path
+        if newFileName != None:
+            self.path = os.path.abspath('%s/%s' % (dest.path, newFileName))
+        else:
+            self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
+        if not onlyReferences:
+            self.shellCollect('mv -v "{}" "{}"', self.oldpath, self.path)
+            if not self.dryrun:
+                os.rename(self.oldpath, self.path)
 
-    # Unregister ourselves at our current parent and register at new parent.
-    if self.parent:
-      self.parent.removeChild(self)
-      dest.addChild(self)
+        # Unregister ourselves at our current parent and register at new parent.
+        if self.parent:
+            self.parent.removeChild(self)
+            dest.addChild(self)
 
-    # Re-parent ourselves and update several properties.
-    self.parent = dest
-    self.base = os.path.basename(self.path)
-    self.dryrun = self.parent.dryrun
-    self.root = self.parent.root
-    self.relpath = self.path.replace('%s/' % self.root, '')
-    self.dl = self.parent.dl + 1
+        # Re-parent ourselves and update several properties.
+        self.parent = dest
+        self.base = os.path.basename(self.path)
+        self.dryrun = self.parent.dryrun
+        self.root = self.parent.root
+        self.relpath = self.path.replace('%s/' % self.root, '')
+        self.dl = self.parent.dl + 1
 
-    # Invoke the move hook, see main class description.
-    self.invoke('move', self, dest)
+        # Invoke the move hook, see main class description.
+        self.invoke('move', self, dest)
 
 #
 # Represent an ordinary file found on the file system.
 #
 class File(Node):
-  extension = ''
+    extension = ''
 
-  # Initialize the file object after calling home.
-  def __init__(self, path, extension, hooks={}, parent=None, dl=1):
-    Node.__init__(
-      self,
-      path=path,
-      hooks=hooks,
-      parent=parent,
-      dl=dl)
+    # Initialize the file object after calling home.
+    def __init__(self, path, extension, hooks={}, parent=None, dl=1):
+        Node.__init__(
+            self,
+            path=path,
+            hooks=hooks,
+            parent=parent,
+            dl=dl)
 
-    # Set the extension if available.
-    if '.' in self.base:
-      self.extension = extension
-    else:
-      extension = ''
+        # Set the extension if available.
+        if '.' in self.base:
+            self.extension = extension
+        else:
+            extension = ''
 
 #
 # Represent a file of a known music file format found on the file system.
@@ -221,63 +228,63 @@ class File(Node):
 #    - sanitize (obj)
 #
 class MusicFile(File):
-  relpath_new = ''
-  artist = ''
-  album = ''
-  title = ''
-  hash = None
-  artist_s = ''
-  album_s = ''
-  title_s = ''
-  hash_s = ''
+    relpath_new = ''
+    artist = ''
+    album = ''
+    title = ''
+    hash = None
+    artist_s = ''
+    album_s = ''
+    title_s = ''
+    hash_s = ''
 
-  # Initialize the music file object after calling home.
-  def __init__(self, path, extension, hooks={}, parent=None, dl=1):
-    File.__init__(
-      self,
-      path=path,
-      extension=extension,
-      hooks=hooks,
-      parent=parent,
-      dl=dl)
+    # Initialize the music file object after calling home.
+    def __init__(self, path, extension, hooks={}, parent=None, dl=1):
+        File.__init__(
+            self,
+            path=path,
+            extension=extension,
+            hooks=hooks,
+            parent=parent,
+            dl=dl)
 
-    # Reset all meta data values of this music file.
-    self.artist = self.album = self.title = ''
-    self.artist_s = self.album_s = self.title_s = ''
+        # Reset all meta data values of this music file.
+        self.artist = self.album = self.title = ''
+        self.artist_s = self.album_s = self.title_s = ''
 
-  # Extract all meta data using the Tagpy library.
-  def extract(self):
-    debug("'%s' extract()" % self, self.dl)
-    f = tagpy.FileRef(self.path, False)
-    self.artist = f.tag().artist
-    self.album = f.tag().album
-    self.title = f.tag().title
+    # Extract all meta data using the Tagpy library.
+    def extract(self):
+        debug("'%s' extract()" % self, self.dl)
+        f = tagpy.FileRef(self.path, False)
+        self.artist = f.tag().artist
+        self.album = f.tag().album
+        self.title = f.tag().title
 
-  # Sanitize the extracted data ready for file system level usage.
-  def sanitize(self):
-    debug("'%s' sanitize()" % self, self.dl)
-    self.artist_s = str(SafeString(self.artist.strip()))
-    self.album_s = str(SafeString(self.album.strip()))
-    self.title_s = str(SafeString(self.title.strip()))
+    # Sanitize the extracted data ready for file system level usage.
+    def sanitize(self):
+        debug("'%s' sanitize()" % self, self.dl)
+        self.artist_s = str(SafeString(self.artist.strip()))
+        self.album_s = str(SafeString(self.album.strip()))
+        self.title_s = str(SafeString(self.title.strip()))
 
-    # Start validating the data, based on field length.
-    if not len(self.artist_s):
-      raise ValueError(self)
-    elif not len(self.album_s):
-      raise ValueError(self)
-    elif not len(self.title_s):
-      raise ValueError(self)
+        # Start validating the data, based on field length.
+        if not len(self.artist_s):
+            raise ValueError(self)
+        elif not len(self.album_s):
+            raise ValueError(self)
+        elif not len(self.title_s):
+            raise ValueError(self)
 
-    # Generate a hash from all the strings to provide a unique file identifier.
-    self.hash = hashlib.md5()
-    self.hash.update(self.artist_s)
-    self.hash.update(self.album_s)
-    self.hash.update(self.title_s)
-    self.hash.update(self.extension)
-    self.hash_s = str(self.hash.hexdigest())
+        # Generate a hash from all the strings to provide a unique file identifier.
+        self.hash = hashlib.md5()
+        self.hash.update(self.artist_s)
+        self.hash.update(self.album_s)
+        self.hash.update(self.title_s)
+        self.hash.update(self.extension)
+        self.hash_s = str(self.hash.hexdigest())
 
-    # Invoke the sanitize hook, see main class description.
-    self.invoke('sanitize', self)
+        # Invoke the sanitize hook, see main class description.
+        self.invoke('sanitize', self)
 
 #
 # Represent a directory found on the file system.
@@ -287,528 +294,538 @@ class MusicFile(File):
 #    - mkdir (obj)
 #
 class Directory(Node):
-  children = []
-
-  # Initialize the file object after calling home.
-  def __init__(self, path, hooks={}, parent=None, dl=1):
-    Node.__init__(
-      self,
-      path=path,
-      hooks=hooks,
-      parent=parent,
-      dl=dl)
-    self.children = []
-
-  # Format our own base representation, add the child count too.
-  def __str__(self):
-    return "%s:%s(%d)" % (self.type, self.base, len(self.children))
-
-  # Enable a dry-run mode on this object and its children.
-  def enableDryRun(self):
-    Node.enableDryRun(self)
-    if len(self.children):
-      for c in self.children:
-        c.enableDryRun()
-
-  # Add a child node.
-  def addChild(self, child):
     children = []
-    for c in self.children:
-      children.append(c)
-    children.append(child)
-    self.children = children
 
-  # Remove a child from this node.
-  def removeChild(self, child):
-    children = []
-    for c in self.children:
-      if c.path != child.path:
-        children.append(c)
-    self.children = children
+    # Initialize the file object after calling home.
+    def __init__(self, path, hooks={}, parent=None, dl=1):
+        Node.__init__(
+            self,
+            path=path,
+            hooks=hooks,
+            parent=parent,
+            dl=dl)
+        self.children = []
 
-  # Traverse into subdirectories and load our children.
-  def traverse(self):
-    self.children = []
-    debug("'%s' traverse()" % self, self.dl)
+    # Format our own base representation, add the child count too.
+    def __str__(self):
+        return "%s:%s(%d)" % (self.type, self.base, len(self.children))
 
-    # Only really traverse if the object exists.
-    if self.exists():
-      for path in os.listdir(self.path):
-        dl = self.dl + 1
-        path = "%s/%s" % (self.path, path)
+    # Enable a dry-run mode on this object and its children.
+    def enableDryRun(self):
+        Node.enableDryRun(self)
+        if len(self.children):
+            for c in self.children:
+                c.enableDryRun()
 
-        # Invoke the traverse_filter hook (see main class description) and
-        # determine if we should include this object (True) or not (False).
-        filter_outcome = self.invoke('traverse_filter', self, path)
-        if filter_outcome is not None:
-          if filter_outcome == False:
-            debug("'%s' traverse(): skipping %s" % (self, path), dl)
-            continue
+    # Add a child node.
+    def addChild(self, child):
+        children = []
+        for c in self.children:
+            children.append(c)
+        children.append(child)
+        self.children = children
 
-        # Perform a set of tests and load the correct class for the found child.
-        if os.path.isdir(path):
-          node = Directory(path=path, hooks=self.hooks, parent=self, dl=dl)
-          node.traverse()
-        elif os.path.isfile(path):
-          music_extensions = ('mp3', 'MP3', 'ogg', 'OGG', 'flac', 'FLAC')
-          extension = path.split('.').pop()
-          if extension in music_extensions:
-            node = MusicFile(path=path, extension=extension, hooks=self.hooks, parent=self, dl=dl)
-          else:
-            node = File(path=path, extension=extension, hooks=self.hooks, parent=self, dl=dl)
+    # Remove a child from this node.
+    def removeChild(self, child):
+        children = []
+        for c in self.children:
+            if c.path != child.path:
+                children.append(c)
+        self.children = children
+
+    # Traverse into subdirectories and load our children.
+    def traverse(self):
+        self.children = []
+        debug("'%s' traverse()" % self, self.dl)
+
+        # Only really traverse if the object exists.
+        if self.exists():
+            for path in os.listdir(self.path):
+                dl = self.dl + 1
+                path = "%s/%s" % (self.path, path)
+
+                # Invoke the traverse_filter hook (see main class description) and
+                # determine if we should include this object (True) or not (False).
+                filter_outcome = self.invoke('traverse_filter', self, path)
+                if filter_outcome is not None:
+                    if filter_outcome == False:
+                        debug("'%s' traverse(): skipping %s" % (self, path), dl)
+                        continue
+
+                # Perform a set of tests and load the correct class for the found child.
+                if os.path.isdir(path):
+                    node = Directory(path=path, hooks=self.hooks, parent=self, dl=dl)
+                    node.traverse()
+                elif os.path.isfile(path):
+                    music_extensions = ('mp3', 'MP3', 'ogg', 'OGG', 'flac', 'FLAC')
+                    extension = path.split('.').pop()
+                    if extension in music_extensions:
+                        node = MusicFile(path=path,
+                                         extension=extension,
+                                         hooks=self.hooks,
+                                         parent=self,
+                                         dl=dl)
+                    else:
+                        node = File(path=path,
+                                    extension=extension,
+                                    hooks=self.hooks,
+                                    parent=self,
+                                    dl=dl)
+                else:
+                    node = Node(path=path, hooks=self.hooks, parent=self, dl=dl)
+
+                # Enable dry run if on the node if it applies to us.
+                if self.dryrun:
+                    node.enableDryRun()
+
+                # Append the child to our list of children.
+                self.children.append(node)
+
+    # Make this directory if it doesn't exist on disk yet.
+    def mkdir(self):
+        debug("'%s' mkdir()" % self, self.dl)
+        if not self.dryrun:
+            os.mkdir(self.path)
+        self.shellCollect('mkdir -v "{}"', self.path)
+
+        # Invoke the mkdir hook, see main class description.
+        self.invoke('mkdir', self)
+
+    # Make multiple directories at once and assure that a path exists.
+    def mkdirs(self, path):
+        debug("'%s' mkdirs()" % self, self.dl)
+
+        # Calculate the sub path and current base being looked for.
+        path = path.split('/')
+        base = path[0]
+        del path[0]
+
+        # Determine whether the top level of the trail already exists.
+        existingDir = False
+        for c in self.children:
+            if c.base == base:
+                existingDir = c
+
+        # Load the new directory object and create it if needed.
+        if not existingDir:
+            dl = self.dl + 1
+            npath = "%s/%s" % (self.path, base)
+            dir = Directory(path=npath, hooks=self.hooks, parent=self, dl=dl)
+            if self.dryrun:
+                dir.enableDryRun()
+            dir.mkdir()
+            self.children.append(dir)
         else:
-          node = Node(path=path, hooks=self.hooks, parent=self, dl=dl)
+            dir = existingDir
 
-        # Enable dry run if on the node if it applies to us.
-        if self.dryrun:
-          node.enableDryRun()
+        # Let the fresh directory object recurse into itself.
+        if len(path):
+            return dir.mkdirs('/'.join(path))
+        return dir
 
-        # Append the child to our list of children.
-        self.children.append(node)
+    # Delete this directory and it's siblings from disk.
+    def remove(self):
+        debug("'%s' remove()" % self, self.dl)
 
-  # Make this directory if it doesn't exist on disk yet.
-  def mkdir(self):
-    debug("'%s' mkdir()" % self, self.dl)
-    if not self.dryrun:
-      os.mkdir(self.path)
-    self.shellCollect('mkdir -v "{}"', self.path)
+        # Start with removing my children and their references.
+        for c in self.children:
+            c.remove()
+        self.children = []
 
-    # Invoke the mkdir hook, see main class description.
-    self.invoke('mkdir', self)
+        # Remove the directory when it's emptied.
+        self.shellCollect('rm -Rv "{}"', self.path)
+        if not self.dryrun:
+            os.rmdir(self.path)
 
-  # Make multiple directories at once and assure that a path exists.
-  def mkdirs(self, path):
-    debug("'%s' mkdirs()" % self, self.dl)
+        # Remove this instance from the parents list of children.
+        if self.parent != None:
+            self.parent.removeChild(self)
 
-    # Calculate the sub path and current base being looked for.
-    path = path.split('/')
-    base = path[0]
-    del path[0]
+        # Invoke the remove hook, see main class description.
+        self.invoke('remove', self)
 
-    # Determine whether the top level of the trail already exists.
-    existingDir = False
-    for c in self.children:
-      if c.base == base:
-        existingDir = c
+    # Move the file system object onto a different location.
+    def move(self, dest, onlyReferences=False):
+        debug("'%s' move()" % self, self.dl)
 
-    # Load the new directory object and create it if needed.
-    if not existingDir:
-      dl = self.dl + 1
-      npath = "%s/%s" % (self.path, base)
-      dir = Directory(path=npath, hooks=self.hooks, parent=self, dl=dl)
-      if self.dryrun:
-        dir.enableDryRun()
-      dir.mkdir()
-      self.children.append(dir)
-    else:
-      dir = existingDir
+        # Thrown an exception when we're being moved to the same location:
+        if id(self) == id(dest):
+            raise AssertionError("Can't move '%s' to itself" % dest)
 
-    # Let the fresh directory object recurse into itself.
-    if len(path):
-      return dir.mkdirs('/'.join(path))
-    return dir
+        # Declare the new path and physically move the object.
+        self.oldpath = self.path
+        self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
+        if not onlyReferences:
+            self.shellCollect('mv -v "{}" "{}"', self.oldpath, self.path)
+        if not self.dryrun:
+            os.rename(self.oldpath, self.path)
 
-  # Delete this directory and it's siblings from disk.
-  def remove(self):
-    debug("'%s' remove()" % self, self.dl)
+        # Unregister ourselves at our current parent and register at new parent.
+        if self.parent:
+            self.parent.removeChild(self)
+            dest.addChild(self)
 
-    # Start with removing my children and their references.
-    for c in self.children:
-      c.remove()
-    self.children = []
+        # Re-parent ourselves and update several properties.
+        self.parent = dest
+        self.base = os.path.basename(self.path)
+        self.dryrun = self.parent.dryrun
+        self.root = self.parent.root
+        self.relpath = self.path.replace('%s/' % self.root, '')
+        self.dl = self.parent.dl + 1
 
-    # Remove the directory when it's emptied.
-    self.shellCollect('rm -Rv "{}"', self.path)
-    if not self.dryrun:
-      os.rmdir(self.path)
+        # Iterate our children and ensure they're moved too.
+        for c in self.children:
+            c.move(dest=self, onlyReferences=True)
 
-    # Remove this instance from the parents list of children.
-    if self.parent != None:
-      self.parent.removeChild(self)
-
-    # Invoke the remove hook, see main class description.
-    self.invoke('remove', self)
-
-  # Move the file system object onto a different location.
-  def move(self, dest, onlyReferences=False):
-    debug("'%s' move()" % self, self.dl)
-
-    # Thrown an exception when we're being moved to the same location:
-    if id(self) == id(dest):
-      raise AssertionError("Can't move '%s' to itself" % dest)
-
-    # Declare the new path and physically move the object.
-    self.oldpath = self.path
-    self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
-    if not onlyReferences:
-      self.shellCollect('mv -v "{}" "{}"', self.oldpath, self.path)
-      if not self.dryrun:
-        os.rename(self.oldpath, self.path)
-
-    # Unregister ourselves at our current parent and register at new parent.
-    if self.parent:
-      self.parent.removeChild(self)
-      dest.addChild(self)
-
-    # Re-parent ourselves and update several properties.
-    self.parent = dest
-    self.base = os.path.basename(self.path)
-    self.dryrun = self.parent.dryrun
-    self.root = self.parent.root
-    self.relpath = self.path.replace('%s/' % self.root, '')
-    self.dl = self.parent.dl + 1
-
-    # Iterate our children and ensure they're moved too.
-    for c in self.children:
-      c.move(dest=self, onlyReferences=True)
-
-    # Invoke the move hook, see main class description.
-    self.invoke('move', self, dest)
+        # Invoke the move hook, see main class description.
+        self.invoke('move', self, dest)
 
 #
 # Represent the collection of all found file objects within the base path.
 #
 class Collection():
-  d_root = d_leftovers = d_stage = None
-  musicfiles_new_relpaths = []
-  directories = []
-  musicfiles = []
-  settings = None
-  hashes = []
-  files = []
-  nodes = []
-  ids = []
-
-  # Initialize the music collection.
-  def __init__(self, settings):
-    self.settings = settings
-    debug("'%s' __init__()" % self, 1)
-
-    # Initialize all directory objects: the root directory, the left-overs and stage directories.
-    self.d_root = Directory(
-      path=self.settings.dir,
-      hooks={
-        'init': self.callbackInit,
-        'remove': self.callbackRemove,
-        'move': self.callbackMove,
-        'sanitize': self.callbackSanitize,
-        'traverse_filter': self.callbackTraverseFilter,
-        'shell_collect': self.callbackShellCollect,
-        'mkdir': self.callbackMkdir})
-    self.d_leftovers = Directory(
-      path="%s/%s" % (self.d_root.path, self.settings.leftoversdir),
-      hooks={'shell_collect': self.callbackShellCollect},
-      dl=2)
-    self.d_stage = Directory(
-      path="%s/%s" % (self.d_root.path, self.settings.stagedir),
-      hooks={'shell_collect': self.callbackShellCollect},
-      parent=self.d_root,
-      dl=2)
-
-    # If we run in --dry-run mode, enable it on all directory objects.
-    if self.settings.dryrun:
-      self.d_root.enableDryRun()
-      self.d_leftovers.enableDryRun()
-      self.d_stage.enableDryRun()
-
-    # LEFTOVERS DIRECTORY: Clean the directory or create it.
-    if self.d_leftovers.exists():
-      self.d_leftovers.traverse()
-      if len(self.d_leftovers.children):
-        for c in self.d_leftovers.children:
-          c.remove()
-        msg(" - Leftovers directory '%s/' cleaned." % self.settings.leftoversdir)
-    else:
-      self.d_leftovers.mkdir()
-      msg(" - Leftovers directory '%s/' created." % self.settings.leftoversdir)
-
-    # STAGE DIRECTORY: Create the directory or verify it is empty when it exists.
-    if self.d_stage.exists():
-      self.d_stage.traverse()
-      if len(self.d_stage.children) != 0:
-        msg(" - Stage directory '%s/' exist but is NOT empty. Please investigate, aborting..." % self.settings.stagedir)
-        sys.exit()
-      else:
-        msg(" - Stage directory '%s/' exists." % self.settings.stagedir)
-    else:
-      self.d_stage.mkdir()
-      msg(" - Stage directory '%s/ created'." % self.settings.stagedir)
-
-  # Format our own base representation.
-  def __str__(self):
-    return "Collection:%s" % self.settings.dir
-
-  # Traverse the base path where the music resides in and pass our registrar.
-  def traverse(self):
-    debug("'%s' traverse()" % self, 1)
-    msg(" - Starting file system analysis.")
-    self.d_root.traverse()
-
-  # Extract all the meta data from the collected music files.
-  def extract(self):
-    debug("'%s' extract()" % self, 1)
-    msg(" - Starting tag extraction.")
-    for f in self.musicfiles:
-      f.extract()
-
-  # Sanitize all extracted meta data for file system usage and validate input.
-  def sanitize(self):
-    debug("'%s' sanitize()" % self, 1)
-    msg(" - Sanitizing data and validating tag input.")
-    for f in self.musicfiles:
-      try:
-        f.sanitize()
-      except ValueError:
-        msg("\n  ERROR: correct the tags of this file or its full album.\n")
-        msg("  File:   '%s'" % f.relpath)
-        msg("  Artist: '%s' --> '%s'" % (f.artist, f.artist_s))
-        msg("  Album:  '%s' --> '%s'" % (f.album, f.album_s))
-        msg("  Title:  '%s' --> '%s'" % (f.title, f.title_s))
-        msg("\n - Aborted, no files have been touched.")
-        sys.exit()
-
-  # Move all the non-music files into the leftovers directory.
-  def moveLeftovers(self):
-    debug("'%s' moveLeftovers()" % self, 1)
-    msg(" - Moving non music files to '%s/'." % self.settings.leftoversdir)
-
-    # Iterate the files - which ain't music - and relocate them to the left-overs
-    # directory while recreating the original directory structure. After this our
-    # self.files index will be empty as they're disregarded from our index.
-    for f in self.files:
-      if os.path.dirname(f.relpath) != '':
-        destination = self.d_leftovers.mkdirs(os.path.dirname(f.relpath))
-      else:
-        destination = self.d_leftovers
-      f.move(destination)
-
-  # Rename the music files and move them into the new structure (inside stage).
-  def moveMusicToStage(self):
-    debug("'%s' moveMusic()" % self, 1)
-    msg(" - Moving music to new tree in stage directory '%s/'." % self.settings.stagedir)
-    for f in self.musicfiles:
-      destination_dir  = os.path.dirname(f.relpath_new)
-      if destination_dir == '':
-        destination_dir = self.d_stage
-      else:
-        destination_dir = self.d_stage.mkdirs(destination_dir)
-      f.move(destination_dir, os.path.basename(f.relpath_new))
-
-  # Remove empty directories in the main music tree.
-  def removeEmptyDirectories(self):
-    debug("'%s' removeEmptyDirectories()" % self, 1)
-    msg(" - Remove empty directories (except stage and leftover directories).")
-    for c in self.d_root.children:
-      if c.type == 'Directory':
-        c.remove()
-
-  # Move all files and directories from stage to the permanent spot.
-  def moveFilesPermanently(self):
-    debug("'%s' moveFilesPermanently()" % self, 1)
-    msg(" - Move everything from stage into the final location.")
-    for c in self.d_stage.children:
-      c.move(self.d_root)
-
-  # Remove the stage directory and object.
-  def removeStageDirectory(self):
-    debug("'%s' removeStageDirectory()" % self, 1)
-    msg(" - Deleting the temporary stage directory '%s/'." % self.settings.stagedir)
-    self.d_stage.remove()
-    del self.d_stage
-    self.d_stage = None
-
-  # Remove the left-overs directory and object.
-  def removeLeftoversDirectory(self):
-    debug("'%s' removeLeftoversDirectory()" % self, 1)
-    if len(self.d_leftovers.children) == 0:
-      msg(" - Deleting the empty leftovers directory '%s/'." % self.settings.leftoversdir)
-      self.d_leftovers.remove()
-      del self.d_leftovers
-      self.d_leftovers = None
-
-  # Cleanup and drop some statistics!
-  def finish(self):
-    debug("'%s' finish()" % self, 1)
-    if self.settings.dryrun:
-      msg(" - DONE! Processed %d files (dry-run mode)." % len(self.musicfiles))
-    else:
-      msg(" - DONE! Processed %d files." % len(self.musicfiles))
-
-  ## HOOK IMPLEMENTATIONS ######################################################
-
-  # Register a reference to any new created file system node in this collection.
-  def callbackInit(self, node):
-    if id(node) in self.ids:
-      return
-    self.ids.append(id(node))
-    if node.type == 'Directory':
-      self.directories.append(node)
-    elif node.type == 'File':
-      self.files.append(node)
-    elif node.type == 'MusicFile':
-      self.musicfiles.append(node)
-    else:
-      self.nodes.append(node)
-
-  # Implementation of the remove hook - remove the object from our music index.
-  def callbackRemove(self, node):
-
-    # Rewrite the ids list - without the given node.
+    d_root = d_leftovers = d_stage = None
+    musicfiles_new_relpaths = []
+    directories = []
+    musicfiles = []
+    settings = None
+    hashes = []
+    files = []
+    nodes = []
     ids = []
-    for i in self.ids:
-      if i != id(node):
-        ids.append(i)
-    self.ids = ids
 
-    # Rewrite any of the trees to forget the object.
-    index = []
-    if node.type == 'Directory':
-      for d in self.directories:
-        if id(d) != id(node):
-          index.append(d)
-      self.directories = index
-    elif node.type == 'File':
-      for f in self.files:
-        if id(f) != id(node):
-          index.append(f)
-      self.files = index
-    elif node.type == 'MusicFile':
-      for f in self.musicfiles:
-        if id(f) != id(node):
-          index.append(f)
-      self.musicfiles = index
-    else:
-      for n in self.nodes:
-        if id(n) != id(node):
-          index.append(n)
-      self.nodes = index
+    # Initialize the music collection.
+    def __init__(self, settings):
+        self.settings = settings
+        debug("'%s' __init__()" % self, 1)
 
-    # In case of a MusicFile, lets also rewrite the hash and relpath's registry.
-    if node.type == 'MusicFile':
-      musicfiles_new_relpaths = []
-      hashes = []
-      for h in self.hashes:
-        if h != node.hash_s:
-          hashes.append(h)
-      for mnr in self.musicfiles_new_relpaths:
-        if mnr != node.relpath_new:
-          musicfiles_new_relpaths.append(mnr)
-      self.hashes = hashes
-      self.musicfiles_new_relpaths = musicfiles_new_relpaths
+        # Initialize all directory objects: the root directory,
+        # the left-overs and stage directories.
+        self.d_root = Directory(
+            path=self.settings.dir,
+            hooks={
+                'init': self.callbackInit,
+                'remove': self.callbackRemove,
+                'move': self.callbackMove,
+                'sanitize': self.callbackSanitize,
+                'traverse_filter': self.callbackTraverseFilter,
+                'shell_collect': self.callbackShellCollect,
+                'mkdir': self.callbackMkdir})
+        self.d_leftovers = Directory(
+            path="%s/%s" % (self.d_root.path, self.settings.leftoversdir),
+            hooks={'shell_collect': self.callbackShellCollect},
+            dl=2)
+        self.d_stage = Directory(
+            path="%s/%s" % (self.d_root.path, self.settings.stagedir),
+            hooks={'shell_collect': self.callbackShellCollect},
+            parent=self.d_root,
+            dl=2)
 
-  # Implementation of the move hook.
-  def callbackMove(self, node, dest):
+        # If we run in --dry-run mode, enable it on all directory objects.
+        if self.settings.dryrun:
+            self.d_root.enableDryRun()
+            self.d_leftovers.enableDryRun()
+            self.d_stage.enableDryRun()
 
-    # Detect if the object being moved - for instance a left over file - goes
-    # outside of our index, and forget about it if it does.
-    if self.callbackMoveIsDestinationUnknown(dest):
-      self.callbackRemove(node)
+        # LEFTOVERS DIRECTORY: Clean the directory or create it.
+        if self.d_leftovers.exists():
+            self.d_leftovers.traverse()
+            if len(self.d_leftovers.children):
+                for c in self.d_leftovers.children:
+                    c.remove()
+            msg(" - Leftovers directory '%s/' cleaned." % self.settings.leftoversdir)
+        else:
+            self.d_leftovers.mkdir()
+            msg(" - Leftovers directory '%s/' created." % self.settings.leftoversdir)
 
-  # Test if the destination or any of its parents aren't in our collection index.
-  def callbackMoveIsDestinationUnknown(self, dest):
-    if id(dest) in self.ids:
-      return False
-    else:
-      if dest.parent is not None:
-        return self.callbackMoveIsDestinationUnknown(dest.parent)
-      else:
+        # STAGE DIRECTORY: Create the directory or verify it is empty when it exists.
+        if self.d_stage.exists():
+            self.d_stage.traverse()
+            if len(self.d_stage.children) != 0:
+                msg(" - Stage directory '%s/' exist but is NOT empty. Please"
+                    " investigate, aborting..." % self.settings.stagedir)
+                sys.exit()
+            else:
+                msg(" - Stage directory '%s/' exists." % self.settings.stagedir)
+        else:
+            self.d_stage.mkdir()
+            msg(" - Stage directory '%s/ created'." % self.settings.stagedir)
+
+    # Format our own base representation.
+    def __str__(self):
+        return "Collection:%s" % self.settings.dir
+
+    # Traverse the base path where the music resides in and pass our registrar.
+    def traverse(self):
+        debug("'%s' traverse()" % self, 1)
+        msg(" - Starting file system analysis.")
+        self.d_root.traverse()
+
+    # Extract all the meta data from the collected music files.
+    def extract(self):
+        debug("'%s' extract()" % self, 1)
+        msg(" - Starting tag extraction.")
+        for f in self.musicfiles:
+            f.extract()
+
+    # Sanitize all extracted meta data for file system usage and validate input.
+    def sanitize(self):
+        debug("'%s' sanitize()" % self, 1)
+        msg(" - Sanitizing data and validating tag input.")
+        for f in self.musicfiles:
+            try:
+                f.sanitize()
+            except ValueError:
+                msg("\n  ERROR: correct the tags of this file or its full album.\n")
+                msg("  File:   '%s'" % f.relpath)
+                msg("  Artist: '%s' --> '%s'" % (f.artist, f.artist_s))
+                msg("  Album:  '%s' --> '%s'" % (f.album, f.album_s))
+                msg("  Title:  '%s' --> '%s'" % (f.title, f.title_s))
+                msg("\n - Aborted, no files have been touched.")
+                sys.exit()
+
+    # Move all the non-music files into the leftovers directory.
+    def moveLeftovers(self):
+        debug("'%s' moveLeftovers()" % self, 1)
+        msg(" - Moving non music files to '%s/'." % self.settings.leftoversdir)
+
+        # Iterate the files - which ain't music - and relocate them to the left-overs
+        # directory while recreating the original directory structure. After this our
+        # self.files index will be empty as they're disregarded from our index.
+        for f in self.files:
+            if os.path.dirname(f.relpath) != '':
+                destination = self.d_leftovers.mkdirs(os.path.dirname(f.relpath))
+            else:
+                destination = self.d_leftovers
+            f.move(destination)
+
+    # Rename the music files and move them into the new structure (inside stage).
+    def moveMusicToStage(self):
+        debug("'%s' moveMusic()" % self, 1)
+        msg(" - Moving music to new tree in stage directory '%s/'." % self.settings.stagedir)
+        for f in self.musicfiles:
+            destination_dir  = os.path.dirname(f.relpath_new)
+            if destination_dir == '':
+                destination_dir = self.d_stage
+            else:
+                destination_dir = self.d_stage.mkdirs(destination_dir)
+            f.move(destination_dir, os.path.basename(f.relpath_new))
+
+    # Remove empty directories in the main music tree.
+    def removeEmptyDirectories(self):
+        debug("'%s' removeEmptyDirectories()" % self, 1)
+        msg(" - Remove empty directories (except stage and leftover directories).")
+        for c in self.d_root.children:
+            if c.type == 'Directory':
+                c.remove()
+
+    # Move all files and directories from stage to the permanent spot.
+    def moveFilesPermanently(self):
+        debug("'%s' moveFilesPermanently()" % self, 1)
+        msg(" - Move everything from stage into the final location.")
+        for c in self.d_stage.children:
+            c.move(self.d_root)
+
+    # Remove the stage directory and object.
+    def removeStageDirectory(self):
+        debug("'%s' removeStageDirectory()" % self, 1)
+        msg(" - Deleting the temporary stage directory '%s/'." % self.settings.stagedir)
+        self.d_stage.remove()
+        del self.d_stage
+        self.d_stage = None
+
+    # Remove the left-overs directory and object.
+    def removeLeftoversDirectory(self):
+        debug("'%s' removeLeftoversDirectory()" % self, 1)
+        if len(self.d_leftovers.children) == 0:
+            msg(" - Deleting the empty leftovers directory '%s/'." % self.settings.leftoversdir)
+            self.d_leftovers.remove()
+            del self.d_leftovers
+            self.d_leftovers = None
+
+    # Cleanup and drop some statistics!
+    def finish(self):
+        debug("'%s' finish()" % self, 1)
+        if self.settings.dryrun:
+            msg(" - DONE! Processed %d files (dry-run mode)." % len(self.musicfiles))
+        else:
+            msg(" - DONE! Processed %d files." % len(self.musicfiles))
+
+    ## HOOK IMPLEMENTATIONS ######################################################
+
+    # Register a reference to any new created file system node in this collection.
+    def callbackInit(self, node):
+        if id(node) in self.ids:
+            return
+        self.ids.append(id(node))
+        if node.type == 'Directory':
+            self.directories.append(node)
+        elif node.type == 'File':
+            self.files.append(node)
+        elif node.type == 'MusicFile':
+            self.musicfiles.append(node)
+        else:
+            self.nodes.append(node)
+
+    # Implementation of the remove hook - remove the object from our music index.
+    def callbackRemove(self, node):
+
+        # Rewrite the ids list - without the given node.
+        ids = []
+        for i in self.ids:
+            if i != id(node):
+                ids.append(i)
+        self.ids = ids
+
+        # Rewrite any of the trees to forget the object.
+        index = []
+        if node.type == 'Directory':
+            for d in self.directories:
+                if id(d) != id(node):
+                    index.append(d)
+            self.directories = index
+        elif node.type == 'File':
+            for f in self.files:
+                if id(f) != id(node):
+                    index.append(f)
+            self.files = index
+        elif node.type == 'MusicFile':
+            for f in self.musicfiles:
+                if id(f) != id(node):
+                    index.append(f)
+            self.musicfiles = index
+        else:
+            for n in self.nodes:
+                if id(n) != id(node):
+                    index.append(n)
+            self.nodes = index
+
+        # In case of a MusicFile, lets also rewrite the hash and relpath's registry.
+        if node.type == 'MusicFile':
+            musicfiles_new_relpaths = []
+            hashes = []
+            for h in self.hashes:
+                if h != node.hash_s:
+                    hashes.append(h)
+            for mnr in self.musicfiles_new_relpaths:
+                if mnr != node.relpath_new:
+                    musicfiles_new_relpaths.append(mnr)
+            self.hashes = hashes
+            self.musicfiles_new_relpaths = musicfiles_new_relpaths
+
+    # Implementation of the move hook.
+    def callbackMove(self, node, dest):
+
+        # Detect if the object being moved - for instance a left over file - goes
+        # outside of our index, and forget about it if it does.
+        if self.callbackMoveIsDestinationUnknown(dest):
+            self.callbackRemove(node)
+
+    # Test if the destination or any of its parents aren't in our collection index.
+    def callbackMoveIsDestinationUnknown(self, dest):
+        if id(dest) in self.ids:
+            return False
+        else:
+            if dest.parent is not None:
+                return self.callbackMoveIsDestinationUnknown(dest.parent)
+            else:
+                return True
+
+    # Implementation of the sanitize hook.
+    def callbackSanitize(self, node):
+
+        # Define a callable to generate a file based hash.
+        def md5(filename, block_size=2**20):
+            f = open(filename)
+            md5 = hashlib.md5()
+            while True:
+                data = f.read(block_size)
+                if not data:
+                    break
+                md5.update(data)
+            return md5.hexdigest()
+
+            # Verify if a song with exactly the same artist, album, title wasn't
+            # submitted before and abort the process if it does.
+            if node.hash_s in self.hashes:
+                msg("\n  ERROR: the following file has been identified as a duplicate!\n")
+                msg("  What this means is that we scanned a file earlier with exactly the")
+                msg("  same artist, album, title and extension. To prevent this from")
+                msg("  causing any conflicts we need you to sort this out first.\n")
+                msg("  File:   '%s'" % node.relpath)
+                msg("  Artist: '%s'" % node.artist)
+                msg("  Album:  '%s'" % node.album)
+                msg("  Title:  '%s'" % node.title)
+
+                # Generate two MD5 hashes, one for this file and the other one.
+                msg("\n  Generated MD5 hashes based on content:")
+                for m in self.musicfiles:
+                    if node.hash_s == m.hash_s:
+                        msg("   - %s: %s" % (md5(m.path), m.relpath))
+                        break
+                msg("   - %s: %s" % (md5(node.path), node.relpath))
+
+                msg("\n - Aborted, no files have been touched.")
+                sys.exit()
+            else:
+                self.hashes.append(node.hash_s)
+
+            # Create a dictionary with replaceable strings, our formatting arguments.
+            kwarguments = {
+                'artist': node.artist_s,
+                'album': node.album_s,
+                'title': node.title_s,
+                'hash': node.hash_s,
+                'ext': node.extension.lower()}
+
+            # Parse the format and set the relpath_new field to reflect the new location.
+            try:
+                node.relpath_new = self.settings.format.format(**kwarguments)
+            except KeyError as e:
+                msg("\n  ERROR: the provided format mentions a non-existing field %s.\n" % e)
+                msg("  The following fields are valid:")
+                msg("   - {artist}")
+                msg("   - {album}")
+                msg("   - {title}")
+                msg("   - {ext}")
+                msg("   - {hash}")
+                msg("\n - Aborted, no files have been touched.")
+                sys.exit()
+
+            # Verify if a different file with exactly the same relpath_new isn't staged:
+            if node.relpath_new in self.musicfiles_new_relpaths:
+                msg("\n  ERROR: the following file has been identified as a duplicate!\n")
+                msg("  We identified that the future file path and name this item is going")
+                msg("  to be moved to has already been staged, indicating a duplicate")
+                msg("  at file name level and a file conflict we need to avoid.\n")
+                msg("  File:     '%s'" % node.relpath)
+                msg("  New path: '%s'" % node.relpath_new)
+                msg("  Artist:   '%s'" % node.artist)
+                msg("  Album:    '%s'" % node.album)
+                msg("  Title:    '%s'" % node.title)
+                msg("\n - Aborted, no files have been touched.")
+                sys.exit()
+            else:
+                self.musicfiles_new_relpaths.append(node.relpath_new)
+
+    # Implementation of the traverse_filter hook.
+    def callbackTraverseFilter(self, node, path):
+
+        # Skip including the leftovers and stage directories within the music tree.
+        if path == self.d_leftovers.path:
+            return False
+        if path == self.d_stage.path:
+            return False
         return True
 
-  # Implementation of the sanitize hook.
-  def callbackSanitize(self, node):
+    # Implementation of the shell_collect hook.
+    def callbackShellCollect(self, command):
+        if self.settings.shell:
+            print(command)
 
-    # Define a callable to generate a file based hash.
-    def md5(filename, block_size=2**20):
-      f = open(filename)
-      md5 = hashlib.md5()
-      while True:
-        data = f.read(block_size)
-        if not data:
-          break
-        md5.update(data)
-      return md5.hexdigest()
-
-    # Verify if a song with exactly the same artist, album, title wasn't
-    # submitted before and abort the process if it does.
-    if node.hash_s in self.hashes:
-      msg("\n  ERROR: the following file has been identified as a duplicate!\n")
-      msg("  What this means is that we scanned a file earlier with exactly the")
-      msg("  same artist, album, title and extension. To prevent this from")
-      msg("  causing any conflicts we need you to sort this out first.\n")
-      msg("  File:   '%s'" % node.relpath)
-      msg("  Artist: '%s'" % node.artist)
-      msg("  Album:  '%s'" % node.album)
-      msg("  Title:  '%s'" % node.title)
-
-      # Generate two MD5 hashes, one for this file and the other one.
-      msg("\n  Generated MD5 hashes based on content:")
-      for m in self.musicfiles:
-        if node.hash_s == m.hash_s:
-          msg("   - %s: %s" % (md5(m.path), m.relpath))
-          break
-      msg("   - %s: %s" % (md5(node.path), node.relpath))
-
-      msg("\n - Aborted, no files have been touched.")
-      sys.exit()
-    else:
-      self.hashes.append(node.hash_s)
-
-    # Create a dictionary with replaceable strings, our formatting arguments.
-    kwarguments = {
-      'artist': node.artist_s,
-      'album': node.album_s,
-      'title': node.title_s,
-      'hash': node.hash_s,
-      'ext': node.extension.lower()}
-
-    # Parse the format and set the relpath_new field to reflect the new location.
-    try:
-      node.relpath_new = self.settings.format.format(**kwarguments)
-    except KeyError as e:
-      msg("\n  ERROR: the provided format mentions a non-existing field %s.\n" % e)
-      msg("  The following fields are valid:")
-      msg("   - {artist}")
-      msg("   - {album}")
-      msg("   - {title}")
-      msg("   - {ext}")
-      msg("   - {hash}")
-      msg("\n - Aborted, no files have been touched.")
-      sys.exit()
-
-    # Verify if a different file with exactly the same relpath_new isn't staged:
-    if node.relpath_new in self.musicfiles_new_relpaths:
-      msg("\n  ERROR: the following file has been identified as a duplicate!\n")
-      msg("  We identified that the future file path and name this item is going")
-      msg("  to be moved to has already been staged, indicating a duplicate")
-      msg("  at file name level and a file conflict we need to avoid.\n")
-      msg("  File:     '%s'" % node.relpath)
-      msg("  New path: '%s'" % node.relpath_new)
-      msg("  Artist:   '%s'" % node.artist)
-      msg("  Album:    '%s'" % node.album)
-      msg("  Title:    '%s'" % node.title)
-      msg("\n - Aborted, no files have been touched.")
-      sys.exit()
-    else:
-      self.musicfiles_new_relpaths.append(node.relpath_new)
-
-  # Implementation of the traverse_filter hook.
-  def callbackTraverseFilter(self, node, path):
-
-    # Skip including the leftovers and stage directories within the music tree.
-    if path == self.d_leftovers.path:
-      return False
-    if path == self.d_stage.path:
-      return False
-    return True
-
-  # Implementation of the shell_collect hook.
-  def callbackShellCollect(self, command):
-    if self.settings.shell:
-      print(command)
-
-  # Implementation of the mkdir hook.
-  def callbackMkdir(self, node):
-    pass
+    # Implementation of the mkdir hook.
+    def callbackMkdir(self, node):
+        pass
 
 ## FUNCTIONS ###################################################################
 
@@ -817,157 +834,157 @@ class Collection():
 #  @returns
 #   Void.
 def __main_import():
-  try:
-    import sys, os, re, hashlib, tagpy
-    from unicodedata import normalize
-    from datetime import datetime
-    from optparse import OptionParser
-    global sys, os, re, tagpy, hashlib, normalize, datetime, OptionParser
-  except Exception as e:
-    print("ERROR: %s\n\nConsider installing packages, e.g.:" % e)
-    print(" $ apt-get install python-tagpy")
-    import sys
-    sys.exit(3) # Internal error.
+    try:
+        import sys, os, re, hashlib, tagpy
+        from unicodedata import normalize
+        from datetime import datetime
+        from optparse import OptionParser
+        global sys, os, re, tagpy, hashlib, normalize, datetime, OptionParser
+    except Exception as e:
+        print("ERROR: %s\n\nConsider installing packages, e.g.:" % e)
+        print(" $ apt-get install python-tagpy")
+        import sys
+        sys.exit(3) # Internal error.
 
 #  MAIN PHASE 2: Configure the option parser.
 #
 #  @returns
 #   The propagated options dictionary.
 def __main_optionparser():
-  usage = "usage: %prog [OPTIONS]... [DIRECTORY]"
-  parser = OptionParser(usage=usage)
-  parser.add_option(
-    "-d", "--dry-run",
-    action="store_true", dest="dryrun", default=False,
-    help="Perform a dry run and don't touch anything.")
-  parser.add_option(
-    "-f", "--format",
-    action="store", type="string", dest="format", metavar='F',
-    default='{artist}/{album}/{artist}-{hash}.{ext}',
-    help="The format in which filenames will be rewritten.")
-  parser.add_option(
-    "-l", "--leftovers",
-    action="store", type="string", dest="leftoversdir", metavar='L',
-    default='__LEFTOVERS',
-    help="The directory where non-music files will be moved to.")
-  parser.add_option(
-    "-S", "--stagedir",
-    action="store", type="string", dest="stagedir", metavar='S',
-    default='__STAGE',
-    help="Temporary directory before music hits its final spot.")
-  parser.add_option(
-    "-s", "--shell",
-    action="store_true", dest="shell", default=False,
-    help="Generate and print shell commands (implies -q and -d)")
-  parser.add_option(
-    "-q", "--quiet",
-    action="store_true", dest="quiet", default=False,
-    help="Silence all output completely, including debugging.")
-  parser.add_option(
-    "-v", "--verbose",
-    action="count", dest="debuglevel", default=False, metavar='V',
-    help="The level of logging verbosity, up to 5 v's.")
-  (options, args) = parser.parse_args()
-  return {'options': options, 'parser': parser, 'args': args}
+    usage = "usage: %prog [OPTIONS]... [DIRECTORY]"
+    parser = OptionParser(usage=usage)
+    parser.add_option(
+        "-d", "--dry-run",
+        action="store_true", dest="dryrun", default=False,
+        help="Perform a dry run and don't touch anything.")
+    parser.add_option(
+        "-f", "--format",
+        action="store", type="string", dest="format", metavar='F',
+        default='{artist}/{album}/{artist}-{hash}.{ext}',
+        help="The format in which filenames will be rewritten.")
+    parser.add_option(
+        "-l", "--leftovers",
+        action="store", type="string", dest="leftoversdir", metavar='L',
+        default='__LEFTOVERS',
+        help="The directory where non-music files will be moved to.")
+    parser.add_option(
+        "-S", "--stagedir",
+        action="store", type="string", dest="stagedir", metavar='S',
+        default='__STAGE',
+        help="Temporary directory before music hits its final spot.")
+    parser.add_option(
+        "-s", "--shell",
+        action="store_true", dest="shell", default=False,
+        help="Generate and print shell commands (implies -q and -d)")
+    parser.add_option(
+        "-q", "--quiet",
+        action="store_true", dest="quiet", default=False,
+        help="Silence all output completely, including debugging.")
+    parser.add_option(
+        "-v", "--verbose",
+        action="count", dest="debuglevel", default=False, metavar='V',
+        help="The level of logging verbosity, up to 5 v's.")
+    (options, args) = parser.parse_args()
+    return {'options': options, 'parser': parser, 'args': args}
 
 #  MAIN PHASE 3: Validate the given arguments and prepare the options object.
 #
 #  @returns
 #   The options object or might preliminary terminate the script if needed.
 def __main_optionvalidator(settings):
-  if not len(settings['args']):
-    settings['parser'].print_help()
-    sys.exit(0) # ok
+    if not len(settings['args']):
+        settings['parser'].print_help()
+        sys.exit(0) # ok
 
-  # Store the mandatory directory argument as setting key "dir".
-  settings['options'].dir = str(settings['args'][0]).strip()
+    # Store the mandatory directory argument as setting key "dir".
+    settings['options'].dir = str(settings['args'][0]).strip()
 
-  # Test whether the path exists.
-  if not os.path.exists(settings['options'].dir):
-    print("ERROR: Directory '%s' not found!\n" % settings['options'].dir)
-    settings['parser'].print_help()
-    sys.exit(3) # ERROR
+    # Test whether the path exists.
+    if not os.path.exists(settings['options'].dir):
+        print("ERROR: Directory '%s' not found!\n" % settings['options'].dir)
+        settings['parser'].print_help()
+        sys.exit(3) # ERROR
 
-  # Test whether the path is a directory as it should be.
-  if not os.path.isdir(settings['options'].dir):
-    print("ERROR: Path '%s' is not a directory!\n" % settings['options'].dir)
-    settings['parser'].print_help()
-    sys.exit(3) # ERROR
+    # Test whether the path is a directory as it should be.
+    if not os.path.isdir(settings['options'].dir):
+        print("ERROR: Path '%s' is not a directory!\n" % settings['options'].dir)
+        settings['parser'].print_help()
+        sys.exit(3) # ERROR
 
-  # Enforce dry-run and quiet mode when --shell is passed.
-  if settings['options'].shell:
-    settings['options'].quiet = True
-    settings['options'].dryrun = True
+    # Enforce dry-run and quiet mode when --shell is passed.
+    if settings['options'].shell:
+        settings['options'].quiet = True
+        settings['options'].dryrun = True
 
-  # De-construct the parser and arguments and return the settings object.
-  del(settings['parser'])
-  del(settings['args'])
-  return settings['options']
+    # De-construct the parser and arguments and return the settings object.
+    del(settings['parser'])
+    del(settings['args'])
+    return settings['options']
 
-##
-##  MAIN PHASE 4: Initialize the debugger if --debug got passed in.
-##
+#
+#  MAIN PHASE 4: Initialize the debugger if --debug got passed in.
+#
 def __main_initdebugger(settings):
-  global debuglevel
-  global quiet
-  debuglevel = settings.debuglevel
-  quiet = settings.quiet
-  if debuglevel:
-    debug('__main_initdebugger()')
+    global debuglevel
+    global quiet
+    debuglevel = settings.debuglevel
+    quiet = settings.quiet
+    if debuglevel:
+        debug('__main_initdebugger()')
 
 #
 #  Log a message to the debugger.
 #
 def debug(string, indentationLevel=0):
-  global debuglevel
-  if not debuglevel:
-    return
+    global debuglevel
+    if not debuglevel:
+        return
 
-  # Skip messages with a higher debuglevel level.
-  if indentationLevel+1 > debuglevel:
-    return
+    # Skip messages with a higher debuglevel level.
+    if indentationLevel+1 > debuglevel:
+        return
 
-  # Generate an indentation prefix.
-  prefix = []
-  indentationLevel = (indentationLevel * 2) + 2
-  for x in range(0, indentationLevel):
-    prefix.append(' ')
-  prefix = ''.join(prefix)
+    # Generate an indentation prefix.
+    prefix = []
+    indentationLevel = (indentationLevel * 2) + 2
+    for x in range(0, indentationLevel):
+        prefix.append(' ')
+    prefix = ''.join(prefix)
 
-  # Reformat and print each line.
-  for line in string.split("\n"):
-    msg("[%s]%s%s" % (str(datetime.utcnow()).split(" ")[1], prefix, line))
+    # Reformat and print each line.
+    for line in string.split("\n"):
+        msg("[%s]%s%s" % (str(datetime.utcnow()).split(" ")[1], prefix, line))
 
 #
 # Print a message to the screen.
 #
 def msg(string):
-  global quiet
-  if quiet:
-    return
-  print(string)
+    global quiet
+    if quiet:
+        return
+    print(string)
 
 #
 # MAIN ROUTINE.
 #
 def main():
-  __main_import()
-  settings = __main_optionvalidator(__main_optionparser())
-  __main_initdebugger(settings)
-  try:
-    coll = Collection(settings)
-    coll.traverse()
-    coll.extract()
-    coll.sanitize()
-    coll.moveLeftovers()
-    coll.moveMusicToStage()
-    coll.removeEmptyDirectories()
-    coll.moveFilesPermanently()
-    coll.removeStageDirectory()
-    coll.removeLeftoversDirectory()
-    coll.finish()
-  except KeyboardInterrupt:
-    print(" Quitting, sorry...")
+    __main_import()
+    settings = __main_optionvalidator(__main_optionparser())
+    __main_initdebugger(settings)
+    try:
+        coll = Collection(settings)
+        coll.traverse()
+        coll.extract()
+        coll.sanitize()
+        coll.moveLeftovers()
+        coll.moveMusicToStage()
+        coll.removeEmptyDirectories()
+        coll.moveFilesPermanently()
+        coll.removeStageDirectory()
+        coll.removeLeftoversDirectory()
+        coll.finish()
+    except KeyboardInterrupt:
+        print(" Quitting, sorry...")
 
 ## MAIN SCRIPT INVOCATION ######################################################
 main()
