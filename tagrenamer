@@ -829,24 +829,7 @@ class Collection():
 
 ## FUNCTIONS ###################################################################
 
-#  MAIN PHASE 1: Import all required libraries.
-#
-#  @returns
-#   Void.
-def __main_import():
-    try:
-        import sys, os, re, hashlib, tagpy
-        from unicodedata import normalize
-        from datetime import datetime
-        from optparse import OptionParser
-        global sys, os, re, tagpy, hashlib, normalize, datetime, OptionParser
-    except Exception as e:
-        print("ERROR: %s\n\nConsider installing packages, e.g.:" % e)
-        print(" $ apt-get install python-tagpy")
-        import sys
-        sys.exit(3) # Internal error.
-
-#  MAIN PHASE 2: Configure the option parser.
+#  MAIN PHASE 1: Configure the option parser.
 #
 #  @returns
 #   The propagated options dictionary.
@@ -887,7 +870,7 @@ def __main_optionparser():
     (options, args) = parser.parse_args()
     return {'options': options, 'parser': parser, 'args': args}
 
-#  MAIN PHASE 3: Validate the given arguments and prepare the options object.
+#  MAIN PHASE 2: Validate the given arguments and prepare the options object.
 #
 #  @returns
 #   The options object or might preliminary terminate the script if needed.
@@ -922,7 +905,7 @@ def __main_optionvalidator(settings):
     return settings['options']
 
 #
-#  MAIN PHASE 4: Initialize the debugger if --debug got passed in.
+#  MAIN PHASE 3: Initialize the debugger if --debug got passed in.
 #
 def __main_initdebugger(settings):
     global debuglevel
@@ -968,8 +951,8 @@ def msg(string):
 # MAIN ROUTINE.
 #
 def main():
-    __main_import()
-    settings = __main_optionvalidator(__main_optionparser())
+    parser = __main_optionparser()
+    settings = __main_optionvalidator(parser)
     __main_initdebugger(settings)
     try:
         coll = Collection(settings)
@@ -987,4 +970,17 @@ def main():
         print(" Quitting, sorry...")
 
 ## MAIN SCRIPT INVOCATION ######################################################
-main()
+if __name__ == "__main__":
+    try:
+        import sys, os, re, hashlib, tagpy
+        from unicodedata import normalize
+        from datetime import datetime
+        from optparse import OptionParser
+        global sys, os, re, tagpy, hashlib, normalize, datetime, OptionParser
+        main()
+    except Exception as e:
+        print("ERROR: %s\n\nConsider installing packages, e.g.:" % e)
+        print(" $ apt-get install python-tagpy")
+        import sys
+        sys.exit(3) # Internal error.
+
