@@ -5,6 +5,13 @@ Combined output and logging facility with level support.
 
 from datetime import datetime
 
+
+def runtime_error(message):
+    """Stop the program using a prefixed RuntimeError."""
+    output = Output()
+    output.runtime_error(message)
+
+
 class Output:
     """
     Combined output and logging facility with level support.
@@ -22,6 +29,14 @@ class Output:
     def set_quiet(self, quiet):
         """Enable or disable quiet mode."""
         self.quiet = quiet
+
+    def runtime_error(self, message):
+        """Stop the program using a prefixed RuntimeError."""
+        error = ['']
+        for line in message.split("\n"):
+            error.append('ERROR: ' + line)
+        error.append('')
+        raise RuntimeError("\n".join(error))
 
     def log(self, message = '', context = '', level = 0):
         """Log a string at the given indentation level."""

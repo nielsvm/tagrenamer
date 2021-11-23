@@ -4,7 +4,9 @@ Represent the collection of all found file objects within the base path.
 """
 
 import os
+import hashlib
 from .directory import Directory
+from .output import runtime_error
 
 class Collection():
     """
@@ -81,10 +83,9 @@ class Collection():
         if self.d_stage.exists():
             self.d_stage.traverse()
             if len(self.d_stage.children) != 0:
-                self.out.write(
-                    " - Stage directory '%s/' exist but is NOT empty. Please"
-                    " investigate, aborting..." % self.settings.stagedir)
-                raise RuntimeError()
+                runtime_error(
+                  "Stage directory '%s/' exist but is NOT empty!"
+                    % self.settings.stagedir)
             else:
                 self.out.write(
                     " - Stage directory '%s/' exists."
@@ -126,13 +127,8 @@ class Collection():
             try:
                 f.sanitize()
             except ValueError:
-                self.out.write("\n  ERROR: correct the tags of this file.\n")
-                self.out.write("File:   '%s'" % f.relpath)
-                self.out.write("Artist: '%s' --> '%s'" % (f.artist, f.artist_s))
-                self.out.write("Album:  '%s' --> '%s'" % (f.album, f.album_s))
-                self.out.write("Title:  '%s' --> '%s'" % (f.title, f.title_s))
-                self.out.write("\n - Aborted, no files have been touched.")
-                raise RuntimeError()
+                runtime_error(
+                    "Please correct the tags of this file:\n%s" % f.path)
 
     def moveLeftovers(self):
         """Move all the non-music files into the leftovers directory.."""
@@ -317,29 +313,15 @@ class Collection():
         # Verify if a song with exactly the same artist, album, title wasn't
         # submitted before and abort the process if it does.
         if node.hash_s in self.hashes:
-            self.out.write("\n  ERROR: the following file has been "
-                            "identified as a duplicate!\n")
-            self.out.write("What this means is that we scanned a file "
-                            "earlier with exactly the")
-            self.out.write("same artist, album, title and extension. To "
-                            "prevent this from")
-            self.out.write("causing any conflicts we need you to sort "
-                            "this out first.\n")
+            self.out.write("\nERROR: the following file has been identified as a duplicate!\n")
+            self.out.write("What this means is that we scanned a file earlier with exactly the")
+            self.out.write("same artist, album, title and extension. To prevent this from")
+            self.out.write("causing any conflicts we need you to sort this out first.\n")
             self.out.write("File:   '%s'" % node.relpath)
             self.out.write("Artist: '%s'" % node.artist)
             self.out.write("Album:  '%s'" % node.album)
             self.out.write("Title:  '%s'" % node.title)
-
-            # Generate two MD5 hashes, one for this file and the other one.
-            self.out.write("\n  Generated MD5 hashes based on content:")
-            for m in self.musicfiles:
-                if node.hash_s == m.hash_s:
-                    self.out.write("   - %s: %s" % (md5(m.path), m.relpath))
-                    break
-            self.out.write("   - %s: %s" % (md5(node.path), node.relpath))
-
-            self.out.write("\n - Aborted, no files have been touched.")
-            raise RuntimeError()
+            runtime_error("Aborted, no files have been touched!")
         else:
             self.hashes.append(node.hash_s)
 
@@ -355,34 +337,22 @@ class Collection():
         try:
             node.relpath_new = self.settings.format.format(**kwarguments)
         except KeyError as e:
-            self.out.write("\n  ERROR: the provided format mentions "
-                            "a non-existing field %s.\n" % e)
-            self.out.write("The following fields are valid:")
-            self.out.write(" - {artist}")
-            self.out.write(" - {album}")
-            self.out.write(" - {title}")
-            self.out.write(" - {ext}")
-            self.out.write(" - {hash}")
-            self.out.write("\n - Aborted, no files have been touched.")
-            raise RuntimeError()
+            runtime_error("The provided format contains invalid fields:\n%s"
+                          % self.settings.format)
 
         # Verify if a different file with exactly the same relpath_new isn't staged:
         if node.relpath_new in self.musicfiles_new_relpaths:
-            self.out.write("\n  ERROR: the following file "
-                            "has been identified as a duplicate!\n")
-            self.out.write("We identified that the future file path "
-                            "and name this item is going")
-            self.out.write("to be moved to has already been staged, "
-                            "indicating a duplicate")
-            self.out.write("at file name level and a file conflict "
-                            "we need to avoid.\n")
-            self.out.write("File:     '%s'" % node.relpath)
-            self.out.write("New path: '%s'" % node.relpath_new)
-            self.out.write("Artist:   '%s'" % node.artist)
-            self.out.write("Album:    '%s'" % node.album)
-            self.out.write("Title:    '%s'" % node.title)
-            self.out.write("\n - Aborted, no files have been touched.")
-            raise RuntimeError()
+            runtime_error("The following file appears to be a duplicate!\n\n"
+                          "File:     '%s'\n"
+                          "New path: '%s'\n"
+                          "Artist:   '%s'\n"
+                          "Album:    '%s'\n"
+                          "Title:    '%s'\n"
+                          % (node.relpath,
+                             node.relpath_new,
+                             node.artist,
+                             node.album,
+                             node.title))
         else:
             self.musicfiles_new_relpaths.append(node.relpath_new)
 
