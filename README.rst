@@ -20,7 +20,7 @@ tagrenamer
 
 Imagine this is inside your music folder:
 
-.. code-block:: bash
+.. code-block:: console
 
    Music/
    ├── MUTTER (2001) - Adios.mp3
@@ -37,7 +37,7 @@ Imagine this is inside your music folder:
 
 What a mess, let's clean it up:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ tagrenamer --format '{artist}/{album}/{artist}-{title}.{ext}' Music/
     - Leftovers directory '__LEFTOVERS/' created.
@@ -52,7 +52,7 @@ What a mess, let's clean it up:
     - Deleting the empty leftovers directory '__LEFTOVERS/'.
     - DONE! Processed 11 files.
 
-.. code-block:: bash
+.. code-block:: console
 
    Music/
    └── rammstein
@@ -100,14 +100,9 @@ Features
 Installation
 ------------
 
-Follow these instructions:
+For now, follow these instructions:
 
 * ``git clone https://github.com/nielsvm/tagrenamer.git``
 * ``pip3 install -r requirements.txt``
-* ``cd tagrenamer/``
-* ``./tagrenamer --help``
-
-Development
-^^^^^^^^^^^
-
-* ``pip3 install -r requirements_dev.txt``
+* ``python3 setup.py install --user``
+* ``tagrenamer --help``

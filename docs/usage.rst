@@ -2,7 +2,7 @@
 Usage
 =====
 
-.. code-block:: bash
+.. code-block:: console
 
    Usage: tagrenamer [OPTIONS]... [DIRECTORY]
 
@@ -20,7 +20,7 @@ Usage
 -------------
 Test if the renames will succeed without touching files:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ tagrenamer --dry-run Music/
    - Leftovers directory '__LEFTOVERS/' created.
@@ -41,7 +41,7 @@ Combine with ``-vvvvv`` to see how the structure looks like.
 ---------------
 Name the leftovers directory differently:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ tagrenamer --leftovers='garbage' Music/
    - Leftovers directory 'garbage/' created.
@@ -60,7 +60,7 @@ Name the leftovers directory differently:
 --------------
 Name the temporary staging directory differently:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ tagrenamer --stagedir='.tmp' Music/
    - Leftovers directory '__LEFTOVERS/' created.
@@ -81,7 +81,7 @@ Generate a list of shell commands that you can manually review and paste into
 your terminal. Enabling ``--shell`` also implies ``--quiet`` and ``--dry-run``
 and will never touch your files:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ tagrenamer --format='{artist}/{album} - {title}.{ext}' --shell Music/
    mkdir -v "Music/__LEFTOVERS"
@@ -106,11 +106,11 @@ and will never touch your files:
 -----------
 Suppress all output:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ tagrenamer --quiet Music/
 
-.. code-block:: bash
+.. code-block:: console
 
    Music
    └── rammstein
@@ -127,7 +127,7 @@ controlled using the ``-v`` parameter. The number of ``v``'s you pass,
 determines the verbosity level which follows the debt of the processed
 collection tree:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ tagrenamer --dry-run -vvvvv Music/
    00:07:58  <__main__>
@@ -195,7 +195,7 @@ collections and favors naming compatibility over readable filenames:
 
 ``{artist}/{album}/{artist}-{hash}.{ext}``
 
-.. code-block:: bash
+.. code-block:: console
 
    Music
    └── rammstein
@@ -208,7 +208,7 @@ Conventional three-level
 ^^^^^^^^^^^^^^^^^^^^^^^^
 ``{artist}/{album}/{artist}-{title}.{ext}``
 
-.. code-block:: bash
+.. code-block:: console
 
    Music
    └── rammstein
@@ -231,7 +231,7 @@ Two-level artist-only folders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``{artist}/{album}-{title}.{ext}``
 
-.. code-block:: bash
+.. code-block:: console
 
    Music
    └── rammstein
@@ -249,7 +249,7 @@ Put it all in one folder because I'm crazy!
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``{artist}:{album} - {title}.{ext}``
 
-.. code-block:: bash
+.. code-block:: console
 
    Music/
    ├── rammstein:mutter - adios.mp3
