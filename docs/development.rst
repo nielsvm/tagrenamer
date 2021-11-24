@@ -37,12 +37,11 @@ First install all dependencies:
     $ pip3 install -r requirements_dev.txt
 
 
-Then, install ``tagrenamer`` locally like this:
+Then, install ``tagrenamer`` locally in development mode like this:
 
 .. code-block:: console
 
-    python3 setup.py install --user
-
+    python3 setup.py development --user
 
 Uninstall:
 
