@@ -2,12 +2,12 @@
 """
 Program arguments, defaults and Settings object.
 """
-
 import optparse
 import os
 import sys
 from tagrenamer import __version__
 from tagrenamer.app.output import runtime_error
+
 
 def get_application_context():
     """Define the program's arguments, options and default settings."""
@@ -48,6 +48,7 @@ def get_application_context():
     (options, args) = parser.parse_args()
     return (options, args, parser)
 
+
 class Settings:
     """
     Settings object.
@@ -87,4 +88,3 @@ class Settings:
     def __getattr__(self, option):
         """Retrieve options via their name."""
         return self.options.__getattribute__(option)
-

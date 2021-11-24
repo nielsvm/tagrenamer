@@ -2,8 +2,8 @@
 """
 Represent any file, directory or other reference found on the file system.
 """
-
 import os
+
 
 class Node():
     """
@@ -15,9 +15,9 @@ class Node():
     - move (obj, dest)
     - shell_collect (command)
     """
-    dl = 1 # Short for debuglevel.
+    dl = 1  # Short for debuglevel.
 
-    def __init__(self, output, path, hooks = {}, parent = None, dl = 1):
+    def __init__(self, output, path, hooks={}, parent=None, dl=1):
         """Initialize the file-system node object."""
         self.out = output
         self.dl = self.dl + dl
@@ -30,7 +30,7 @@ class Node():
         self.parent = parent
         self.hooks = hooks
 
-        if parent == None:
+        if parent is None:
             if os.path.isdir(self.path):
                 self.root = self.path
             else:
@@ -65,9 +65,9 @@ class Node():
         # Sub function to clean incoming argument values.
         def escape(string):
             string = string.replace('"', '\\"')
-            string = string.replace("&", "\&")
-            string = string.replace('\/', '|')
-            string = string.replace('`', '\`')
+            string = string.replace("&", "\&")  # noqa: W605
+            string = string.replace('\/', '|')  # noqa: W605
+            string = string.replace('`', '\`')  # noqa: W605
             return string
 
         # Create a new arguments list and escape the values.
@@ -96,7 +96,7 @@ class Node():
             os.unlink(self.path)
 
         # Remove this instance from the parents list of children.
-        if self.parent != None:
+        if self.parent is not None:
             self.parent.removeChild(self)
 
         # Invoke the remove hook, see main class description.
@@ -112,7 +112,7 @@ class Node():
 
         # Declare the new path and physically move the object.
         self.oldpath = self.path
-        if newFileName != None:
+        if newFileName is not None:
             self.path = os.path.abspath('%s/%s' % (dest.path, newFileName))
         else:
             self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
@@ -122,9 +122,9 @@ class Node():
                 os.rename(self.oldpath, self.path)
 
         # Log the move action for retrospection.
-        self.out.log("src: '%s'"  % self.oldpath.replace(self.root + '/', ''),
+        self.out.log("src: '%s'" % self.oldpath.replace(self.root + '/', ''),
                      '%s.move' % self.type, self.dl + 1)
-        self.out.log("dst: '%s'"  % self.path.replace(self.root + '/', ''),
+        self.out.log("dst: '%s'" % self.path.replace(self.root + '/', ''),
                      '%s.move' % self.type, self.dl + 1)
 
         # Unregister ourselves at our current parent and register at new parent.

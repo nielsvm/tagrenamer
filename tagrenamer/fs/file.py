@@ -2,8 +2,8 @@
 """
 Represent an ordinary file found on the file system.
 """
-
 from tagrenamer.fs.node import Node
+
 
 class File(Node):
     """

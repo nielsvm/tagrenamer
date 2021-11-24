@@ -2,17 +2,18 @@
 """
 Represent a string that is absolutely filesystem safe.
 """
-
 from unicodedata import normalize
 import transliterate
+
 
 class SafeString():
     """
     Represent a string that is absolutely filesystem safe.
     """
-    whitelist = ('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
-                 'p','q','r','s','t','u','v','w','x','y','z','-',' ', '0', '1',
-                 '2', '3', '4', '5', '6', '7', '8', '9')
+    whitelist = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+                 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
+                 'y', 'z', '-', ' ', '0', '1', '2', '3', '4', '5', '6', '7',
+                 '8', '9')
 
     def __init__(self, old_string):
         """Initialize the SafeString object."""
@@ -27,8 +28,8 @@ class SafeString():
         # Apply common cleanup tasks:
         self.new = self.new.lower()
         self.new = self.new.strip()
-        decomp   = normalize("NFKD", self.new)
-        self.new = ''.join(c for c in decomp if ord(c)<0x7f)
+        normalst = normalize("NFKD", self.new)
+        self.new = ''.join(c for c in normalst if ord(c) < 0x7f)
         self.filter()
 
     def filter(self):

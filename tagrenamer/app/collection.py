@@ -2,12 +2,12 @@
 """
 Represent the collection of all found file objects within the base path.
 """
-
 import os
 import hashlib
 from tagrenamer import __version__
 from tagrenamer.fs.directory import Directory
 from tagrenamer.app.output import runtime_error
+
 
 class Collection():
     """
@@ -32,7 +32,7 @@ class Collection():
         self.nodes = []
 
         self.out.log(
-            context = '%s.__init__' % self.type, level = 1)
+            context='%s.__init__' % self.type, level=1)
 
         # Initialize all directory objects: the root directory,
         # the left-overs and stage directories.
@@ -86,8 +86,8 @@ class Collection():
     def initializeDirectories(self):
         """Initialize the leftovers and staging directories."""
         self.out.log(
-            context = '%s.initializeDirectories' % self.type, level = 1)
-                # LEFTOVERS DIRECTORY: Clean the directory or create it.
+            context='%s.initializeDirectories' % self.type, level=1)
+        # LEFTOVERS DIRECTORY: Clean the directory or create it.
         if self.d_leftovers.exists():
             self.d_leftovers.traverse()
             if len(self.d_leftovers.children):
@@ -95,24 +95,24 @@ class Collection():
                     c.remove()
             self.out.write(
                 " - Leftovers directory '%s/' cleaned."
-                    % self.settings.leftoversdir)
+                % self.settings.leftoversdir)
         else:
             self.d_leftovers.mkdir()
             self.out.write(
                 " - Leftovers directory '%s/' created."
-                    % self.settings.leftoversdir)
+                % self.settings.leftoversdir)
 
         # STAGE DIRECTORY: Create the directory or verify it is empty when it exists.
         if self.d_stage.exists():
             self.d_stage.traverse()
             if len(self.d_stage.children) != 0:
                 runtime_error(
-                  "Stage directory '%s/' exist but is NOT empty!"
+                    "Stage directory '%s/' exist but is NOT empty!"
                     % self.settings.stagedir)
             else:
                 self.out.write(
                     " - Stage directory '%s/' exists."
-                        % self.settings.stagedir)
+                    % self.settings.stagedir)
         else:
             self.d_stage.mkdir()
             self.out.write(
@@ -121,14 +121,14 @@ class Collection():
     def traverse(self):
         """Traverse the base path where the music resides in and pass our registrar."""
         self.out.log(
-            context = '%s.traverse' % self.type, level = 1)
+            context='%s.traverse' % self.type, level=1)
         self.out.write(" - Traverse the collection and extract music tags.")
         self.d_root.traverse()
 
     def sanitize(self):
         """Sanitize all extracted meta data for file system usage and validate input."""
         self.out.log(
-            context = '%s.sanitize' % self.type, level = 1)
+            context='%s.sanitize' % self.type, level=1)
         self.out.write(" - Validating tag input and sanitizing variables.")
         for f in self.musicfiles:
             try:
@@ -140,7 +140,7 @@ class Collection():
     def moveLeftovers(self):
         """Move all the non-music files into the leftovers directory.."""
         self.out.log(
-            context = '%s.moveLeftovers' % self.type, level = 1)
+            context='%s.moveLeftovers' % self.type, level=1)
         self.out.write(
             " - Moving non music files to '%s/'." % self.settings.leftoversdir)
 
@@ -157,12 +157,12 @@ class Collection():
     def moveMusicToStage(self):
         """Rename the music files and move them into the new structure (inside stage)."""
         self.out.log(
-            context = '%s.moveMusicToStage' % self.type, level = 1)
+            context='%s.moveMusicToStage' % self.type, level=1)
         self.out.write(
             " - Moving music to new tree in stage directory '%s/'."
-                % self.settings.stagedir)
+            % self.settings.stagedir)
         for f in self.musicfiles:
-            destination_dir  = os.path.dirname(f.relpath_new)
+            destination_dir = os.path.dirname(f.relpath_new)
             if destination_dir == '':
                 destination_dir = self.d_stage
             else:
@@ -172,7 +172,7 @@ class Collection():
     def removeEmptyDirectories(self):
         """Remove empty directories in the main music tree."""
         self.out.log(
-            context = '%s.removeEmptyDirectories' % self.type, level = 1)
+            context='%s.removeEmptyDirectories' % self.type, level=1)
         self.out.write(
             " - Remove empty directories (except stage/leftover directories).")
         for c in self.d_root.children:
@@ -182,7 +182,7 @@ class Collection():
     def moveFilesPermanently(self):
         """Move all files and directories from stage to the permanent spot."""
         self.out.log(
-            context = '%s.moveFilesPermanently' % self.type, level = 1)
+            context='%s.moveFilesPermanently' % self.type, level=1)
         self.out.write(
             " - Move everything from stage into the final location.")
         for c in self.d_stage.children:
@@ -191,10 +191,10 @@ class Collection():
     def removeStageDirectory(self):
         """Remove the stage directory and object."""
         self.out.log(
-            context = '%s.removeStageDirectory' % self.type, level = 1)
+            context='%s.removeStageDirectory' % self.type, level=1)
         self.out.write(
             " - Deleting the temporary stage directory '%s/'."
-                % self.settings.stagedir)
+            % self.settings.stagedir)
         self.d_stage.remove()
         del self.d_stage
         self.d_stage = None
@@ -202,11 +202,11 @@ class Collection():
     def removeLeftoversDirectory(self):
         """Remove the left-overs directory and object."""
         self.out.log(
-            context = '%s.removeLeftoversDirectory' % self.type, level = 1)
+            context='%s.removeLeftoversDirectory' % self.type, level=1)
         if len(self.d_leftovers.children) == 0:
             self.out.write(
                 " - Deleting the empty leftovers directory '%s/'."
-                    % self.settings.leftoversdir)
+                % self.settings.leftoversdir)
             self.d_leftovers.remove()
             del self.d_leftovers
             self.d_leftovers = None
@@ -214,16 +214,16 @@ class Collection():
     def finish(self):
         """Cleanup and drop some statistics."""
         self.out.log(
-            context = '%s.finish' % self.type, level = 1)
+            context='%s.finish' % self.type, level=1)
         if self.settings.dryrun:
             self.out.write(
                 " - DONE! Processed %d files (dry-run mode)."
-                    % len(self.musicfiles))
+                % len(self.musicfiles))
         else:
             self.out.write(
                 " - DONE! Processed %d files." % len(self.musicfiles))
 
-    ## HOOK IMPLEMENTATIONS ######################################################
+    # HOOK IMPLEMENTATIONS #####################################################
 
     def callbackInit(self, node):
         """Register a reference to any new created file system node in this collection."""
@@ -343,7 +343,7 @@ class Collection():
         # Parse the format and set the relpath_new field to reflect the new location.
         try:
             node.relpath_new = self.settings.format.format(**kwarguments)
-        except KeyError as e:
+        except KeyError:
             runtime_error("The provided format contains invalid fields:\n%s"
                           % self.settings.format)
 

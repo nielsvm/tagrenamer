@@ -2,7 +2,6 @@
 """
 Combined output and logging facility with level support.
 """
-
 from datetime import datetime
 
 
@@ -38,7 +37,7 @@ class Output:
         error.append('')
         raise RuntimeError("\n".join(error))
 
-    def log(self, message = '', context = '', level = 0):
+    def log(self, message='', context='', level=0):
         """Log a string at the given indentation level."""
         if not self.debuglevel:
             return

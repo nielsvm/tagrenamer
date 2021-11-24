@@ -2,11 +2,11 @@
 """
 Represent a directory found on the file system.
 """
-
 import os
 from tagrenamer.fs.node import Node
 from tagrenamer.fs.file import File
 from tagrenamer.fs.musicfile import MusicFile, music_extensions
+
 
 class Directory(Node):
     """
@@ -66,7 +66,7 @@ class Directory(Node):
                 # determine if we should include this object (True) or not (False).
                 filter_outcome = self.invoke('traverse_filter', self, path)
                 if filter_outcome is not None:
-                    if filter_outcome == False:
+                    if filter_outcome is False:
                         self.out.log('%s (skipping)' % str(self),
                                      '%s.traverse' % self.type,
                                      self.dl)
@@ -122,7 +122,7 @@ class Directory(Node):
 
     def mkdirs(self, path):
         """Make multiple directories at once and assure that a path exists."""
-        self.out.log(context = '%s.mkdirs' % self.type, level = self.dl)
+        self.out.log(context='%s.mkdirs' % self.type, level=self.dl)
 
         # Calculate the sub path and current base being looked for.
         path = path.split('/')
@@ -171,7 +171,7 @@ class Directory(Node):
             os.rmdir(self.path)
 
         # Remove this instance from the parents list of children.
-        if self.parent != None:
+        if self.parent is not None:
             self.parent.removeChild(self)
 
         # Invoke the remove hook, see main class description.

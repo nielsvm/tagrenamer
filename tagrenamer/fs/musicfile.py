@@ -2,7 +2,6 @@
 """
 Represent a file of a known music file format found on the file system.
 """
-
 import hashlib
 import taglib
 from tagrenamer.app.safestring import SafeString
@@ -54,11 +53,11 @@ class MusicFile(File):
         self.artist = ' '.join(f.tags.get('ARTIST', ['unknown_artist']))
         self.album = ' '.join(f.tags.get('ALBUM', ['unknown_album']))
         self.title = ' '.join(f.tags.get('TITLE', ['unknown_title']))
-        self.out.log("Artst: '%s'"  % self.artist,
+        self.out.log("Artst: '%s'" % self.artist,
                      '%s.extract' % self.type, self.dl + 1)
-        self.out.log("Album: '%s'"  % self.album,
+        self.out.log("Album: '%s'" % self.album,
                      '%s.extract' % self.type, self.dl + 1)
-        self.out.log("Title: '%s'"  % self.title,
+        self.out.log("Title: '%s'" % self.title,
                      '%s.extract' % self.type, self.dl + 1)
 
     def sanitize(self):
@@ -85,15 +84,15 @@ class MusicFile(File):
         self.hash_s = str(self.hash.hexdigest())
 
         # Print the sanitized metadata fields:
-        self.out.log("{artist}: '%s'"  % self.artist_s,
+        self.out.log("{artist}: '%s'" % self.artist_s,
                      '%s.sanitize' % self.type, self.dl + 1)
-        self.out.log("{album}: '%s'"  % self.album_s,
+        self.out.log("{album}: '%s'" % self.album_s,
                      '%s.sanitize' % self.type, self.dl + 1)
-        self.out.log("{title}: '%s'"  % self.title_s,
+        self.out.log("{title}: '%s'" % self.title_s,
                      '%s.sanitize' % self.type, self.dl + 1)
-        self.out.log("{hash}: '%s'"  % self.hash_s,
+        self.out.log("{hash}: '%s'" % self.hash_s,
                      '%s.sanitize' % self.type, self.dl + 1)
-        self.out.log("{ext}: '%s'"  % self.extension,
+        self.out.log("{ext}: '%s'" % self.extension,
                      '%s.sanitize' % self.type, self.dl + 1)
 
         # Invoke the sanitize hook, see main class description.
