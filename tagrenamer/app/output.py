@@ -66,9 +66,9 @@ class Output:
         # Delegate output writing to write():
         if message:
             for line in message.split("\n"):
-                self.write(prefix + line)
+                print(prefix + line)
         else:
-            self.write(prefix)
+            print(prefix)
 
     def write(self, message):
         """Print the given message when not-quiet."""

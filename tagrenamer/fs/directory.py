@@ -4,9 +4,9 @@ Represent a directory found on the file system.
 """
 
 import os
-from .node import Node
-from .file import File
-from .musicfile import MusicFile, music_extensions
+from tagrenamer.fs.node import Node
+from tagrenamer.fs.file import File
+from tagrenamer.fs.musicfile import MusicFile, music_extensions
 
 class Directory(Node):
     """

@@ -6,12 +6,14 @@ Program arguments, defaults and Settings object.
 import optparse
 import os
 import sys
-from .output import runtime_error
+from tagrenamer import __version__
+from tagrenamer.app.output import runtime_error
 
 def get_application_context():
     """Define the program's arguments, options and default settings."""
-    usage = "usage: %prog [OPTIONS]... [DIRECTORY]"
-    parser = optparse.OptionParser(usage=usage)
+    usage = "usage: %prog [OPTIONS] [DIRECTORY]/"
+    version = "%prog {version}".format(version=__version__)
+    parser = optparse.OptionParser(usage=usage, version=version)
     parser.add_option(
         "-d", "--dry-run",
         action="store_true", dest="dryrun", default=False,
@@ -38,14 +40,13 @@ def get_application_context():
     parser.add_option(
         "-q", "--quiet",
         action="store_true", dest="quiet", default=False,
-        help="Silence all output completely, including debugging.")
+        help="Silence non-debugging output completely.")
     parser.add_option(
         "-v", "--verbose",
         action="count", dest="debuglevel", default=False, metavar='V',
-        help="The level of logging verbosity, up to 5 v's.")
+        help="The level of logging verbosity.")
     (options, args) = parser.parse_args()
     return (options, args, parser)
-
 
 class Settings:
     """

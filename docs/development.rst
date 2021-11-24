@@ -41,7 +41,13 @@ Then, install ``tagrenamer`` locally in development mode like this:
 
 .. code-block:: console
 
-    python3 setup.py development --user
+    python3 setup.py develop --user
+
+Or install as package:
+
+.. code-block:: console
+
+    python3 setup.py install --user
 
 Uninstall:
 

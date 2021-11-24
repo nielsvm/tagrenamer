@@ -5,8 +5,9 @@ Represent the collection of all found file objects within the base path.
 
 import os
 import hashlib
-from .directory import Directory
-from .output import runtime_error
+from tagrenamer import __version__
+from tagrenamer.fs.directory import Directory
+from tagrenamer.app.output import runtime_error
 
 class Collection():
     """
@@ -64,7 +65,29 @@ class Collection():
             self.d_leftovers.enableDryRun()
             self.d_stage.enableDryRun()
 
-        # LEFTOVERS DIRECTORY: Clean the directory or create it.
+    def process(self):
+        """Process the collection."""
+        self.out.write(" - Tagrenamer version %s." % __version__)
+        self.initializeDirectories()
+        self.traverse()
+        self.sanitize()
+        self.moveLeftovers()
+        self.moveMusicToStage()
+        self.removeEmptyDirectories()
+        self.moveFilesPermanently()
+        self.removeStageDirectory()
+        self.removeLeftoversDirectory()
+        self.finish()
+
+    def __str__(self):
+        """Format our own base representation."""
+        return self.settings.dir.rstrip('/')
+
+    def initializeDirectories(self):
+        """Initialize the leftovers and staging directories."""
+        self.out.log(
+            context = '%s.initializeDirectories' % self.type, level = 1)
+                # LEFTOVERS DIRECTORY: Clean the directory or create it.
         if self.d_leftovers.exists():
             self.d_leftovers.traverse()
             if len(self.d_leftovers.children):
@@ -93,23 +116,7 @@ class Collection():
         else:
             self.d_stage.mkdir()
             self.out.write(
-                " - Stage directory '%s/ created'." % self.settings.stagedir)
-
-    def process(self):
-        """Process the collection."""
-        self.traverse()
-        self.sanitize()
-        self.moveLeftovers()
-        self.moveMusicToStage()
-        self.removeEmptyDirectories()
-        self.moveFilesPermanently()
-        self.removeStageDirectory()
-        self.removeLeftoversDirectory()
-        self.finish()
-
-    def __str__(self):
-        """Format our own base representation."""
-        return self.settings.dir.rstrip('/')
+                " - Stage directory '%s/' created." % self.settings.stagedir)
 
     def traverse(self):
         """Traverse the base path where the music resides in and pass our registrar."""

@@ -13,7 +13,7 @@ endef
 export PRINT_HELP_PYSCRIPT
 
 help:
-	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
+	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 clean: clean-build clean-docs clean-pyc clean-test
 
@@ -39,7 +39,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 docs: ## generate Sphinx HTML documentation, including API docs
-	rm -rf docs/modules/*
+	rm -rf docs/modules
 	sphinx-apidoc -H "Modules" --tocfile "index" -o docs/modules/ tagrenamer
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html

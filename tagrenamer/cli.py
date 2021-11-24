@@ -1,31 +1,20 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """
 tagrenamer - Mass music collection renamer.
-
-@description
-  Tagrenamer lets you mass-rename music collection trees provided each file
-  has valid metadata tags. It preserves non-music files by putting them into
-  the '__LEFTOVERS' folder. You can use --dry-run to simulate or the --shell
-  option to generate a list of commands you can first review.
-
-@author
-  Niels van Mourik <niels@nielsvm.org>
 """
-
-
 import sys
-from lib.output import runtime_error
+from tagrenamer.app.output import runtime_error
 
-if __name__ == "__main__":
+
+def main():
+    """Main application dispatch routine."""
+
     try:
-
         # Import the core libraries and handle import errors:
         try:
-            from lib.output import Output
-            from lib.settings import Settings
-            from lib.collection import Collection
+            from tagrenamer.app.output import Output
+            from tagrenamer.app.settings import Settings
+            from tagrenamer.app.collection import Collection
         except ImportError as e:
             runtime_error("%s\n\n"
                           "Check if these Python packages are installed:\n"
@@ -44,7 +33,12 @@ if __name__ == "__main__":
         collection.process()
     except RuntimeError as e:
         print(e)
-        sys.exit(1)
+        return 1
     except KeyboardInterrupt:
         print("Quitting...")
-        sys.exit(-1)
+        return -1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

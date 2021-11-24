@@ -5,8 +5,8 @@ Represent a file of a known music file format found on the file system.
 
 import hashlib
 import taglib
-from .file import File
-from .safestring import SafeString
+from tagrenamer.app.safestring import SafeString
+from tagrenamer.fs.file import File
 
 
 music_extensions = ('mp3', 'MP3', 'ogg', 'OGG', 'flac', 'FLAC')

@@ -4,17 +4,27 @@ Usage
 
 .. code-block:: console
 
-   Usage: tagrenamer [OPTIONS]... [DIRECTORY]
+   Usage: tagrenamer [OPTIONS] [DIRECTORY]/
 
    Options:
+     --version            show program's version number and exit
      -h, --help           show this help message and exit
      -d, --dry-run        Perform a dry run and don't touch anything.
      -f F, --format=F     The format in which filenames will be rewritten.
      -l L, --leftovers=L  The directory where non-music files will be moved to.
      -S S, --stagedir=S   Temporary directory before music hits its final spot.
      -s, --shell          Generate and print shell commands (implies -q and -d)
-     -q, --quiet          Silence all output completely, including debugging.
-     -v, --verbose        The level of logging verbosity, up to 5 v's.
+     -q, --quiet          Silence non-debugging output completely.
+     -v, --verbose        The level of logging verbosity.
+
+``--version``
+-------------
+Report the application version:
+
+.. code-block:: console
+
+   $ tagrenamer --version
+   tagrenamer 0.0.1
 
 ``--dry-run``
 -------------
@@ -23,6 +33,7 @@ Test if the renames will succeed without touching files:
 .. code-block:: console
 
    $ tagrenamer --dry-run Music/
+   - Tagrenamer version 0.0.1.
    - Leftovers directory '__LEFTOVERS/' created.
    - Stage directory '__STAGE/' created.
    - Traverse the collection and extract music tags.
@@ -44,6 +55,7 @@ Name the leftovers directory differently:
 .. code-block:: console
 
    $ tagrenamer --leftovers='garbage' Music/
+   - Tagrenamer version 0.0.1.
    - Leftovers directory 'garbage/' created.
    - Stage directory '__STAGE/' created.
    - Traverse the collection and extract music tags.
@@ -63,6 +75,7 @@ Name the temporary staging directory differently:
 .. code-block:: console
 
    $ tagrenamer --stagedir='.tmp' Music/
+   - Tagrenamer version 0.0.1.
    - Leftovers directory '__LEFTOVERS/' created.
    - Stage directory '.tmp/' created.
    - Traverse the collection and extract music tags.
@@ -104,7 +117,7 @@ and will never touch your files:
 
 ``--quiet``
 -----------
-Suppress all output:
+Suppress all normal output:
 
 .. code-block:: console
 
@@ -129,9 +142,10 @@ collection tree:
 
 .. code-block:: console
 
-   $ tagrenamer --dry-run -vvvvv Music/
+   $ tagrenamer --dry-run --quiet -vvvvv Music/
    00:07:58  <__main__>
    00:07:58  <Collection.__init__>
+   00:07:58  <Collection.initializeDirectories>
    00:07:58  <Directory.exists>               __LEFTOVERS
    00:07:58  <Directory.mkdir>                __LEFTOVERS
    00:07:58  <Directory.exists>               __STAGE
