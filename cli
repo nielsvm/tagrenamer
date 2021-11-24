@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-tagrenamer - Mass music collection renamer
+tagrenamer - Mass music collection renamer.
 
 @description
   Tagrenamer lets you mass-rename music collection trees provided each file
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         output = Output()
         output.set_debuglevel(settings.debuglevel)
         output.set_quiet(settings.quiet)
-        output.log(context = __name__)
+        output.log(context=__name__)
 
         # Dispatch application control to the collection processor.
         collection = Collection(output, settings)
