@@ -6,7 +6,7 @@ build:
   apt_packages:
     - libtag1-dev
   tools:
-    python: "3"
+    python: "3.9"
 
 sphinx:
   configuration: docs/conf.py
