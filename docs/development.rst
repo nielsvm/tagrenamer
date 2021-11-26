@@ -26,30 +26,34 @@ Or download the `tarball`_:
 Local installation
 ------------------
 
-First install all dependencies:
+Install Tagrenamer into your home folder like this:
 
 .. code-block:: console
 
     $ pip3 install -r requirements.txt
+    $ python3 setup.py install --user
 
 .. code-block:: console
 
-    $ pip3 install -r requirements_dev.txt
+    $ tagrenamer --help
 
-
-Then, install ``tagrenamer`` locally in development mode like this:
-
-.. code-block:: console
-
-    python3 setup.py develop --user
-
-Or install as package:
+Development installation
+------------------------
 
 .. code-block:: console
 
-    python3 setup.py install --user
+    $ make venv
+    $ source venv/bin/activate
+    $ python3 setup.py develop --user
 
-Uninstall:
+.. code-block:: console
+
+    $ tagrenamer --help
+
+Uninstall
+---------
+
+Regardless of how you installed it, uninstall using ``pip``:
 
 .. code-block:: console
 
@@ -58,16 +62,40 @@ Uninstall:
 Documentation
 -------------
 
-Loop documentation building using:
+.. code-block:: console
+
+    $ make venv
+    $ source venv/bin/activate
+    $ make docs
+
+Constant documentation build during editing:
 
 .. code-block:: console
 
     $ make servedocs
 
-One-off build:
+Release
+-------
 
 .. code-block:: console
 
-    $ make clean
-    $ make docs
+    $ bumpversion --allow-dirty --new-version x.x.x major
+    $ git add -p
+    $ nano CHANGELOG.rst
+    $ git commit -m "version bump"
 
+.. code-block:: console
+
+    $ git tag x.x.x
+
+.. code-block:: console
+
+    $ git push --tags
+
+.. code-block:: console
+
+    $ make dist
+
+.. code-block:: console
+
+    $ make release

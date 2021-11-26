@@ -3,15 +3,13 @@ tagrenamer
 ==========
 
 .. image:: https://img.shields.io/github/languages/top/nielsvm/tagrenamer.svg
+        :target: https://github.com/nielsvm/tagrenamer
 
 .. image:: https://img.shields.io/github/license/nielsvm/tagrenamer.svg
         :target: https://raw.githubusercontent.com/nielsvm/tagrenamer/master/LICENSE
 
 .. image:: https://img.shields.io/pypi/v/tagrenamer.svg
         :target: https://pypi.python.org/pypi/tagrenamer
-
-.. image:: https://img.shields.io/github/v/release/nielsvm/tagrenamer.svg
-        :target: https://github.com/nielsvm/tagrenamer/releases
 
 *Mass music collection renamer.*
 
@@ -101,9 +99,10 @@ Features
 Installation
 ------------
 
-For now, follow these instructions:
+Install Tagrenamer directly from `PyPI`_ using ``pip``:
 
-* ``git clone https://github.com/nielsvm/tagrenamer.git``
-* ``pip3 install -r requirements.txt``
-* ``python3 setup.py install --user``
-* ``tagrenamer --help``
+.. code-block:: console
+
+   $ pip3 install tagrenamer
+
+.. _PyPI: https://pypi.org/project/tagrenamer/

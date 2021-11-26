@@ -15,7 +15,7 @@ export PRINT_HELP_PYSCRIPT
 help:
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-clean: clean-build clean-docs clean-pyc clean-test
+clean: clean-build clean-docs clean-pyc clean-venv clean-test
 
 clean-build: ## remove build artifacts
 	rm -fr build/
@@ -37,6 +37,9 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 	rm -fr .pytest_cache
+
+clean-venv: ## remove existing virtual environment
+	rm -rf venv/
 
 lint/flake8: ## check style with flake8
 	flake8 tagrenamer tests
@@ -69,3 +72,10 @@ dist: clean ## builds source and wheel package
 	python3 setup.py sdist
 	python3 setup.py bdist_wheel
 	ls -l dist
+
+venv: clean-venv ## create a new virtual environment
+	python3 -m venv venv/
+	. venv/bin/activate
+	pip3 install -r requirements.txt
+	pip3 install -r requirements_dev.txt
+	echo && echo "RUN: source venv/bin/activate"
