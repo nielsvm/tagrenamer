@@ -15,7 +15,7 @@ export PRINT_HELP_PYSCRIPT
 help:
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-clean: clean-build clean-docs clean-pyc clean-venv clean-test
+clean: clean-build clean-docs clean-pyc clean-test
 
 clean-build: ## remove build artifacts
 	rm -fr build/

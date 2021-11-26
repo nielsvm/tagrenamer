@@ -87,17 +87,16 @@ Release
 .. code-block:: console
 
     $ git tag x.x.x
-
-.. code-block:: console
-
     $ git push --tags
 
 .. code-block:: console
 
-    $ make dist
+    $ make venv
+    $ source venv/bin/activate
 
 .. code-block:: console
 
+    $ make dist
     $ make release
 
 .. code-block:: console
