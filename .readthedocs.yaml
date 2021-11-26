@@ -1,6 +1,5 @@
-# .readthedocs.yaml
 # Read the Docs configuration file
-# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+# https://docs.readthedocs.io/en/stable/config-file/v2.html
 version: 2
 build:
   os: ubuntu-20.04

@@ -28,6 +28,7 @@ pycparser==2.21
 pyflakes==2.4.0
 Pygments==2.10.0
 pyparsing==3.0.6
+pytaglib==1.4.6
 pytz==2021.3
 PyYAML==6.0
 readme-renderer==30.0
@@ -45,6 +46,7 @@ sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
 tqdm==4.62.3
+transliterate==1.10.2
 twine==3.6.0
 urllib3==1.26.7
 watchdog==2.1.6

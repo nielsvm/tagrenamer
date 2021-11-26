@@ -11,6 +11,9 @@ tagrenamer
 .. image:: https://img.shields.io/pypi/v/tagrenamer.svg
         :target: https://pypi.python.org/pypi/tagrenamer
 
+.. image:: https://img.shields.io/readthedocs/tagrenamer.svg
+        :target: https://tagrenamer.readthedocs.io/
+
 *Mass music collection renamer.*
 
 **Tagrenamer completely cleans up your music folder for you, all you need**
