@@ -38,6 +38,20 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr htmlcov/
 	rm -fr .pytest_cache
 
+lint/flake8: ## check style with flake8
+	flake8 tagrenamer tests
+
+lint: lint/flake8 ## check style
+
+test: ## run tests quickly with the default Python
+	python3 setup.py test
+
+coverage: ## check code coverage quickly with the default Python
+	coverage run --source tagrenamer setup.py test
+	coverage report -m
+	coverage html
+	echo && realpath htmlcov/index.html
+
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -rf docs/modules
 	sphinx-apidoc -H "Modules" --tocfile "index" -o docs/modules/ tagrenamer
@@ -47,3 +61,11 @@ docs: ## generate Sphinx HTML documentation, including API docs
 
 servedocs: docs ## compile the docs watching for changes
 	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
+
+release: dist ## package and upload a release
+	twine upload dist/*
+
+dist: clean ## builds source and wheel package
+	python3 setup.py sdist
+	python3 setup.py bdist_wheel
+	ls -l dist
