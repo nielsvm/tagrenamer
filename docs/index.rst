@@ -7,8 +7,8 @@ Tagrenamer documentation
 
    Introduction <README>
    CHANGELOG
+   DEVELOPMENT
    installation
-   development
    usage
    modules/index
 

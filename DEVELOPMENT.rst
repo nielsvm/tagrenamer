@@ -1,1 +1,1 @@
-docs/development.rst
+docs/DEVELOPMENT.rst

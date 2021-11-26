@@ -71,7 +71,7 @@ release: dist ## package and upload a release
 dist: clean ## builds source and wheel package
 	python3 setup.py sdist
 	python3 setup.py bdist_wheel
-	ls -l dist
+	echo && find dist/
 
 venv: clean-venv ## create a new virtual environment
 	python3 -m venv venv/
