@@ -80,8 +80,8 @@ Release
 .. code-block:: console
 
     $ bumpversion --allow-dirty --new-version x.x.x major
-    $ git add -p
     $ nano CHANGELOG.rst
+    $ git add -p
     $ git commit -m "version bump"
 
 .. code-block:: console

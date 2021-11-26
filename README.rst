@@ -41,7 +41,7 @@ What a mess, let's clean it up:
 .. code-block:: console
 
    $ tagrenamer --format '{artist}/{album}/{artist}-{title}.{ext}' Music/
-    - Tagrenamer version 0.0.1.
+    - Tagrenamer version 0.0.2.
     - Leftovers directory '__LEFTOVERS/' created.
     - Stage directory '__STAGE/' created.
     - Traverse the collection and extract music tags.
