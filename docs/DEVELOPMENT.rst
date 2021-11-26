@@ -99,3 +99,7 @@ Release
 .. code-block:: console
 
     $ make release
+
+.. code-block:: console
+
+    $ curl -X POST -d "branches=master" -d "token=..." https://readthedocs.org/api/v2/webhook/tagrenamer/.../
