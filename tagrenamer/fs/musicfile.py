@@ -15,11 +15,12 @@ class MusicFile(File):
     """
     Represent a file of a known music file format found on the file system.
 
-    Hooks:
+    Callbacks:
     - sanitize (obj)
     """
 
-    def __init__(self, output, settings, path, extension, hooks={}, parent=None, dl=1):
+    def __init__(self, output, settings, path, extension,
+                 callbacks={}, parent=None, dl=1):
         """Initialize the music file object."""
         self.relpath_new = ''
         self.artist = ''
@@ -36,7 +37,7 @@ class MusicFile(File):
             settings,
             path=path,
             extension=extension,
-            hooks=hooks,
+            callbacks=callbacks,
             parent=parent,
             dl=dl)
 
@@ -93,7 +94,7 @@ class MusicFile(File):
         elif not len(self.title_s):
             raise ValueError(self)
 
-        # Generate a hash from all the strings to provide a unique file identifier.
+        # Generate a hash from each string to build  a unique file identifier.
         self.hash = hashlib.md5()
         self.hash.update(self.artist_s.encode('utf-8'))
         self.hash.update(self.album_s.encode('utf-8'))
@@ -113,5 +114,5 @@ class MusicFile(File):
         self.out.log("{ext}: '%s'" % self.extension,
                      '%s.sanitize' % self.type, self.dl + 1)
 
-        # Invoke the sanitize hook, see main class description.
+        # Invoke the sanitize callback, see main class description.
         self.invoke('sanitize', self)

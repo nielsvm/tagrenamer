@@ -12,12 +12,13 @@ class Directory(Node):
     """
     Represent a directory found on the file system.
 
-    Hooks:
+    Callbacks:
     - traverse_filter (obj, path), return True/False
     - mkdir (obj)
     """
 
-    def __init__(self, output, settings, path, hooks={}, parent=None, dl=1):
+    def __init__(self, output, settings, path,
+                 callbacks={}, parent=None, dl=1):
         """Initialize the directory object."""
         self.children = []
         Node.__init__(
@@ -25,7 +26,7 @@ class Directory(Node):
             output,
             settings,
             path=path,
-            hooks=hooks,
+            callbacks=callbacks,
             parent=parent,
             dl=dl)
 
@@ -56,8 +57,9 @@ class Directory(Node):
                 dl = self.dl + 1
                 path = "%s/%s" % (self.path, path)
 
-                # Invoke the traverse_filter hook (see main class description) and
-                # determine if we should include this object (True) or not (False).
+                # Invoke the traverse_filter callback (class description) and
+                # determine if we should include this object (True)
+                # or not (False).
                 filter_outcome = self.invoke('traverse_filter', self, path)
                 if filter_outcome is not None:
                     if filter_outcome is False:
@@ -66,12 +68,12 @@ class Directory(Node):
                                      self.dl)
                         continue
 
-                # Perform a set of tests and load the correct class for the found child.
+                # Instantiate the right objects for each child.
                 if os.path.isdir(path):
                     node = Directory(output=self.out,
                                      settings=self.settings,
                                      path=path,
-                                     hooks=self.hooks,
+                                     callbacks=self.callbacks,
                                      parent=self,
                                      dl=dl)
                     node.traverse()
@@ -82,7 +84,7 @@ class Directory(Node):
                                          settings=self.settings,
                                          path=path,
                                          extension=extension,
-                                         hooks=self.hooks,
+                                         callbacks=self.callbacks,
                                          parent=self,
                                          dl=dl)
                     else:
@@ -90,14 +92,14 @@ class Directory(Node):
                                     settings=self.settings,
                                     path=path,
                                     extension=extension,
-                                    hooks=self.hooks,
+                                    callbacks=self.callbacks,
                                     parent=self,
                                     dl=dl)
                 else:
                     node = Node(output=self.out,
                                 settings=self.settings,
                                 path=path,
-                                hooks=self.hooks,
+                                callbacks=self.callbacks,
                                 parent=self,
                                 dl=dl)
 
@@ -111,7 +113,7 @@ class Directory(Node):
             os.mkdir(self.path)
         self.shellCollect('mkdir -v "{}"', self.path)
 
-        # Invoke the mkdir hook, see main class description.
+        # Invoke the mkdir callback, see main class description.
         self.invoke('mkdir', self)
 
     def mkdirs(self, path):
@@ -136,7 +138,7 @@ class Directory(Node):
             dir = Directory(output=self.out,
                             settings=self.settings,
                             path=npath,
-                            hooks=self.hooks,
+                            callbacks=self.callbacks,
                             parent=self,
                             dl=dl)
             dir.mkdir()
@@ -167,7 +169,7 @@ class Directory(Node):
         if self.parent is not None:
             self.parent.removeChild(self)
 
-        # Invoke the remove hook, see main class description.
+        # Invoke the remove callback, see main class description.
         self.invoke('remove', self)
 
     def move(self, dest, onlyReferences=False):
@@ -186,7 +188,7 @@ class Directory(Node):
             if not self.settings.dryrun:
                 os.rename(self.oldpath, self.path)
 
-        # Unregister ourselves at our current parent and register at new parent.
+        # Deregister ourselves at this parent and register at new parent.
         if self.parent:
             self.parent.removeChild(self)
             dest.addChild(self)
@@ -202,5 +204,5 @@ class Directory(Node):
         for c in self.children:
             c.move(dest=self, onlyReferences=True)
 
-        # Invoke the move hook, see main class description.
+        # Invoke the move callback, see main class description.
         self.invoke('move', self, dest)

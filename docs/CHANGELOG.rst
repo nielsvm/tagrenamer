@@ -6,6 +6,8 @@ Changelog
 Unreleased
 ----------
 
+* Feature: new ``--albumartist`` opt-in flag to support VA albums.
+* Updated code to be pep8 compatible again.
 * Inject the Settings object into the Node object for easier access.
 * Made the `makefile` more resilient by letting it check ``VIRTUAL_ENV``.
 * Documentation: set language so building readthedocs.io works again.

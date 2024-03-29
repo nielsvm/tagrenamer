@@ -40,24 +40,24 @@ class Collection():
             output=self.out,
             settings=self.settings,
             path=self.settings.dir,
-            hooks={'init': self.callbackInit,
-                   'remove': self.callbackRemove,
-                   'move': self.callbackMove,
-                   'sanitize': self.callbackSanitize,
-                   'traverse_filter': self.callbackTraverseFilter,
-                   'shell_collect': self.callbackShellCollect,
-                   'mkdir': self.callbackMkdir})
+            callbacks={'init': self.callbackInit,
+                       'remove': self.callbackRemove,
+                       'move': self.callbackMove,
+                       'sanitize': self.callbackSanitize,
+                       'traverse_filter': self.callbackTraverseFilter,
+                       'shell_collect': self.callbackShellCollect,
+                       'mkdir': self.callbackMkdir})
         self.d_leftovers = Directory(
             output=self.out,
             settings=self.settings,
             path="%s/%s" % (self.d_root.path, self.settings.leftoversdir),
-            hooks={'shell_collect': self.callbackShellCollect},
+            callbacks={'shell_collect': self.callbackShellCollect},
             dl=2)
         self.d_stage = Directory(
             output=self.out,
             settings=self.settings,
             path="%s/%s" % (self.d_root.path, self.settings.stagedir),
-            hooks={'shell_collect': self.callbackShellCollect},
+            callbacks={'shell_collect': self.callbackShellCollect},
             parent=self.d_root,
             dl=2)
 
@@ -83,7 +83,8 @@ class Collection():
         """Initialize the leftovers and staging directories."""
         self.out.log(
             context='%s.initializeDirectories' % self.type, level=1)
-        # LEFTOVERS DIRECTORY: Clean the directory or create it.
+        # LEFTOVERS DIRECTORY:
+        # Clean the directory or create it.
         if self.d_leftovers.exists():
             self.d_leftovers.traverse()
             if len(self.d_leftovers.children):
@@ -98,7 +99,8 @@ class Collection():
                 " - Leftovers directory '%s/' created."
                 % self.settings.leftoversdir)
 
-        # STAGE DIRECTORY: Create the directory or verify it is empty when it exists.
+        # STAGE DIRECTORY:
+        # Create the directory or verify it is empty when it exists.
         if self.d_stage.exists():
             self.d_stage.traverse()
             if len(self.d_stage.children) != 0:
@@ -115,14 +117,14 @@ class Collection():
                 " - Stage directory '%s/' created." % self.settings.stagedir)
 
     def traverse(self):
-        """Traverse the base path where the music resides in and pass our registrar."""
+        """Traverse base path where the music resides and pass registrar."""
         self.out.log(
             context='%s.traverse' % self.type, level=1)
         self.out.write(" - Traverse the collection and extract music tags.")
         self.d_root.traverse()
 
     def sanitize(self):
-        """Sanitize all extracted meta data for file system usage and validate input."""
+        """Sanitize all extracted metadata and validate input."""
         self.out.log(
             context='%s.sanitize' % self.type, level=1)
         self.out.write(" - Validating tag input and sanitizing variables.")
@@ -140,18 +142,20 @@ class Collection():
         self.out.write(
             " - Moving non music files to '%s/'." % self.settings.leftoversdir)
 
-        # Iterate the files - which ain't music - and relocate them to the left-overs
-        # directory while recreating the original directory structure. After this our
-        # self.files index will be empty as they're disregarded from our index.
+        # Iterate the files - which ain't music - and relocate them to the
+        # left-overs directory while recreating the original directory
+        # structure. After this our self.files index will be empty as they're
+        # disregarded from our index.
         for f in self.files:
             if os.path.dirname(f.relpath) != '':
-                destination = self.d_leftovers.mkdirs(os.path.dirname(f.relpath))
+                destination = self.d_leftovers.mkdirs(
+                                                os.path.dirname(f.relpath))
             else:
                 destination = self.d_leftovers
             f.move(destination)
 
     def moveMusicToStage(self):
-        """Rename the music files and move them into the new structure (inside stage)."""
+        """Rename music and move them into the new structure (inside stage)."""
         self.out.log(
             context='%s.moveMusicToStage' % self.type, level=1)
         self.out.write(
@@ -219,10 +223,10 @@ class Collection():
             self.out.write(
                 " - DONE! Processed %d files." % len(self.musicfiles))
 
-    # HOOK IMPLEMENTATIONS #####################################################
+    # CALLBACKS ##############################################################
 
     def callbackInit(self, node):
-        """Register a reference to any new created file system node in this collection."""
+        """Register reference to any new created fs node in this collection."""
         if id(node) in self.ids:
             return
         self.ids.append(id(node))
@@ -236,7 +240,7 @@ class Collection():
             self.nodes.append(node)
 
     def callbackRemove(self, node):
-        """Implementation of the remove hook - remove the object from our music index."""
+        """Remove callback - remove the object from our music index."""
 
         # Rewrite the ids list - without the given node.
         ids = []
@@ -268,7 +272,7 @@ class Collection():
                     index.append(n)
             self.nodes = index
 
-        # In case of a MusicFile, lets also rewrite the hash and relpath's registry.
+        # In case of a MusicFile, also rewrite the hash and relpath's registry.
         if node.type == 'MusicFile':
             musicfiles_new_relpaths = []
             hashes = []
@@ -282,10 +286,10 @@ class Collection():
             self.musicfiles_new_relpaths = musicfiles_new_relpaths
 
     def callbackMove(self, node, dest):
-        """Implementation of the move hook."""
+        """Move callback."""
 
-        # Detect if the object being moved - for instance a left over file - goes
-        # outside of our index, and forget about it if it does.
+        # Detect if the object is being moved - for instance if a left over
+        # file - goes outside of our index, and forget about it if it does.
         if self.callbackMoveIsDestinationUnknown(dest):
             self.callbackRemove(node)
 
@@ -300,7 +304,7 @@ class Collection():
                 return True
 
     def callbackSanitize(self, node):
-        """Implementation of the sanitize hook."""
+        """Sanitize callback."""
 
         # Define a callable to generate a file based hash.
         def md5(filename, block_size=2**20):
@@ -316,10 +320,17 @@ class Collection():
         # Verify if a song with exactly the same artist, album, title wasn't
         # submitted before and abort the process if it does.
         if node.hash_s in self.hashes:
-            self.out.write("\nERROR: the following file has been identified as a duplicate!\n")
-            self.out.write("What this means is that we scanned a file earlier with exactly the")
-            self.out.write("same artist, album, title and extension. To prevent this from")
-            self.out.write("causing any conflicts we need you to sort this out first.\n")
+            self.out.write(
+                "\nERROR: the following file has been "
+                "identified as a duplicate!\n")
+            self.out.write(
+                "What this means is that we scanned a "
+                "file earlier with exactly the")
+            self.out.write(
+                "same artist, album, title and extension. "
+                "To prevent this from")
+            self.out.write(
+                "causing any conflicts we need you to sort this out first.\n")
             self.out.write("File:   '%s'" % node.relpath)
             self.out.write("Artist: '%s'" % node.artist)
             self.out.write("Album:  '%s'" % node.album)
@@ -328,7 +339,7 @@ class Collection():
         else:
             self.hashes.append(node.hash_s)
 
-        # Create a dictionary with replaceable strings, our formatting arguments.
+        # Create a dictionary with replacement strings used by --format.
         kwarguments = {
             'artist': node.artist_s,
             'album': node.album_s,
@@ -336,14 +347,14 @@ class Collection():
             'hash': node.hash_s,
             'ext': node.extension.lower()}
 
-        # Parse the format and set the relpath_new field to reflect the new location.
+        # Parse the format and set relpath_new to reflect the new location.
         try:
             node.relpath_new = self.settings.format.format(**kwarguments)
         except KeyError:
             runtime_error("The provided format contains invalid fields:\n%s"
                           % self.settings.format)
 
-        # Verify if a different file with exactly the same relpath_new isn't staged:
+        # Verify if a different file with exact same relpath_new isn't staged:
         if node.relpath_new in self.musicfiles_new_relpaths:
             runtime_error("The following file appears to be a duplicate!\n\n"
                           "File:     '%s'\n"
@@ -360,9 +371,9 @@ class Collection():
             self.musicfiles_new_relpaths.append(node.relpath_new)
 
     def callbackTraverseFilter(self, node, path):
-        """Implementation of the traverse_filter hook."""
+        """Implementation of the traverse_filter callback."""
 
-        # Skip including the leftovers and stage directories within the music tree.
+        # Skip including leftovers and stage directories within music tree.
         if path == self.d_leftovers.path:
             return False
         if path == self.d_stage.path:
@@ -370,10 +381,10 @@ class Collection():
         return True
 
     def callbackShellCollect(self, command):
-        """Implementation of the shell_collect hook."""
+        """Implementation of the shell_collect callback."""
         if self.settings.shell:
             print(command)
 
     def callbackMkdir(self, node):
-        """Implementation of the mkdir hook."""
+        """Implementation of the mkdir callback."""
         pass

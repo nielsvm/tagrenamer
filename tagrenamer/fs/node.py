@@ -9,7 +9,7 @@ class Node():
     """
     Represent any file, directory or other reference found on the file system.
 
-    Hooks:
+    Callbacks:
     - init (obj)
     - remove (obj)
     - move (obj, dest)
@@ -17,7 +17,8 @@ class Node():
     """
     dl = 1  # Short for debuglevel.
 
-    def __init__(self, output, settings, path, hooks={}, parent=None, dl=1):
+    def __init__(self, output, settings, path,
+                 callbacks={}, parent=None, dl=1):
         """Initialize the file-system node object."""
         self.settings = settings
         self.out = output
@@ -29,7 +30,7 @@ class Node():
         self.path = os.path.abspath(path)
         self.base = os.path.basename(self.path)
         self.parent = parent
-        self.hooks = hooks
+        self.callbacks = callbacks
 
         if parent is None:
             if os.path.isdir(self.path):
@@ -40,7 +41,7 @@ class Node():
             self.root = self.parent.root
         self.relpath = self.path.replace('%s/' % self.root, '')
 
-        # Invoke the init hook, see main class description.
+        # Invoke the init callback, see main class description.
         self.invoke('init', self)
 
     def __str__(self):
@@ -49,18 +50,18 @@ class Node():
             return "'%s'" % self.base
         return self.base
 
-    def invoke(self, hook, *args):
-        """Invoke the given hook when they have been registered at object construction."""
-        if len(self.hooks) == 0:
+    def invoke(self, callback, *args):
+        """ Invoke the given callback registered during object construction."""
+        if len(self.callbacks) == 0:
             return
-        if hook in self.hooks:
-            return self.hooks[hook](*args)
+        if callback in self.callbacks:
+            return self.callbacks[callback](*args)
 
     def shellCollect(self, command, *args):
         """Collect the shell equivalent of a file or directory action."""
 
-        # Stop the call if there's no registered hook for this.
-        if 'shell_collect' not in self.hooks:
+        # Stop the call if there's no registered callback for this.
+        if 'shell_collect' not in self.callbacks:
             return
 
         # Sub function to clean incoming argument values.
@@ -77,7 +78,7 @@ class Node():
             newargs.append(escape(a))
         args = tuple(newargs)
 
-        # Parse the command and call our shell_collect hook.
+        # Parse the command and call our shell_collect callback.
         self.invoke('shell_collect', command.format(*newargs))
 
     def exists(self):
@@ -96,7 +97,7 @@ class Node():
         if self.parent is not None:
             self.parent.removeChild(self)
 
-        # Invoke the remove hook, see main class description.
+        # Invoke the remove callback, see main class description.
         self.invoke('remove', self)
 
     def move(self, dest, newFileName=None, onlyReferences=False):
@@ -124,7 +125,7 @@ class Node():
         self.out.log("dst: '%s'" % self.path.replace(self.root + '/', ''),
                      '%s.move' % self.type, self.dl + 1)
 
-        # Unregister ourselves at our current parent and register at new parent.
+        # Deregister ourselves at this parent and register at new parent.
         if self.parent:
             self.parent.removeChild(self)
             dest.addChild(self)
@@ -136,5 +137,5 @@ class Node():
         self.relpath = self.path.replace('%s/' % self.root, '')
         self.dl = self.parent.dl + 1
 
-        # Invoke the move hook, see main class description.
+        # Invoke the move callback, see main class description.
         self.invoke('move', self, dest)
