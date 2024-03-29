@@ -76,6 +76,6 @@ dist: clean venv ## builds source and wheel package
 venv: clean-venv ## create a new virtual environment
 	python3 -m venv venv/
 	. venv/bin/activate
-	pip3 install -r requirements.txt
-	pip3 install -r requirements_dev.txt
+	venv/bin/pip3 install -r requirements.txt
+	venv/bin/pip3 install -r requirements_dev.txt
 	echo && echo "RUN: source venv/bin/activate"
