@@ -31,7 +31,7 @@ Install Tagrenamer into your home folder like this:
 .. code-block:: console
 
     $ pip3 install -r requirements.txt
-    $ python3 setup.py install --user
+    $ python3 -m pip install .
 
 .. code-block:: console
 
@@ -44,7 +44,7 @@ Development installation
 
     $ make venv
     $ source venv/bin/activate
-    $ python3 setup.py develop --user
+    $ python3 -m pip install --editable .
 
 .. code-block:: console
 
