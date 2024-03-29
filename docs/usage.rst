@@ -24,7 +24,7 @@ Report the application version:
 .. code-block:: console
 
    $ tagrenamer --version
-   tagrenamer 0.0.2
+   tagrenamer 0.0.3
 
 ``--dry-run``
 -------------
@@ -33,7 +33,7 @@ Test if the renames will succeed without touching files:
 .. code-block:: console
 
    $ tagrenamer --dry-run Music/
-   - Tagrenamer version 0.0.2.
+   - Tagrenamer version 0.0.3.
    - Leftovers directory '__LEFTOVERS/' created.
    - Stage directory '__STAGE/' created.
    - Traverse the collection and extract music tags.
@@ -55,7 +55,7 @@ Name the leftovers directory differently:
 .. code-block:: console
 
    $ tagrenamer --leftovers='garbage' Music/
-   - Tagrenamer version 0.0.2.
+   - Tagrenamer version 0.0.3.
    - Leftovers directory 'garbage/' created.
    - Stage directory '__STAGE/' created.
    - Traverse the collection and extract music tags.
@@ -75,7 +75,7 @@ Name the temporary staging directory differently:
 .. code-block:: console
 
    $ tagrenamer --stagedir='.tmp' Music/
-   - Tagrenamer version 0.0.2.
+   - Tagrenamer version 0.0.3.
    - Leftovers directory '__LEFTOVERS/' created.
    - Stage directory '.tmp/' created.
    - Traverse the collection and extract music tags.

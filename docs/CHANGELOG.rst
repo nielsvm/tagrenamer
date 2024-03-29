@@ -1,9 +1,18 @@
+
 =========
 Changelog
 =========
 
 Unreleased
 ----------
+
+0.0.3 (2024-03-29)
+------------------
+
+* Updated dependencies.
+* Added tagrenamer.toml to move away  from setup.py.
+* Replaced setup.py-based instructions.
+* Updated development installation instructions to suggest pipx.
 
 0.0.2 (2021-11-26)
 ------------------
