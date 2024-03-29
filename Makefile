@@ -55,7 +55,7 @@ coverage: ## check code coverage quickly with the default Python
 	coverage html
 	echo && realpath htmlcov/index.html
 
-docs: ## generate Sphinx HTML documentation, including API docs
+docs: venv ## generate Sphinx HTML documentation, including API docs
 	rm -rf docs/modules
 	sphinx-apidoc -H "Modules" --tocfile "index" -o docs/modules/ tagrenamer
 	$(MAKE) -C docs clean
@@ -68,7 +68,7 @@ servedocs: docs ## compile the docs watching for changes
 release: dist ## package and upload a release
 	twine upload dist/*
 
-dist: clean ## builds source and wheel package
+dist: clean venv ## builds source and wheel package
 	python3 setup.py sdist
 	python3 setup.py bdist_wheel
 	echo && find dist/

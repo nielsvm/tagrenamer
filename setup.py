@@ -35,6 +35,7 @@ setup(
             'tagrenamer=tagrenamer.cli:main',
         ],
     },
+    setup_requires=["wheel"],
     install_requires=requirements,
     license="GNU General Public License v3",
     long_description=readme + '\n\n' + changelog,
