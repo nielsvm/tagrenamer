@@ -51,11 +51,28 @@ class MusicFile(File):
         """Extract all meta data using the Taglib library."""
         self.out.log(str(self), '%s.extract' % self.type, self.dl)
         f = taglib.File(self.path)
+        # Determine the value of what becomes the {{artist}} field:
         self.artist = ' '.join(f.tags.get('ARTIST', ['unknown_artist']))
+        albumartist = ' '.join(f.tags.get('ALBUMARTIST', ['']))
+        if not self.settings.albumartist and albumartist:
+            self.out.runtime_error(
+                "The following file has a albumartist tag set:\n\n"
+                "File:        '%s'\n"
+                "Artist:      '%s'\n"
+                "Albumartist: '%s'\n"
+                "\nPlease remove 'albumartist' tags from your files.\n"
+                "\nRun with --albumartist if you are renaming VA albums!"
+                % (self.relpath, self.artist, albumartist))
+        elif self.settings.albumartist and albumartist:
+            self.artist = albumartist
+            self.out.log("Artst: '%s' (via albumartist)" % self.artist,
+                         '%s.extract' % self.type, self.dl + 1)
+        else:
+            self.out.log("Artst: '%s'" % self.artist,
+                         '%s.extract' % self.type, self.dl + 1)
+        # Extract the other fields:
         self.album = ' '.join(f.tags.get('ALBUM', ['unknown_album']))
         self.title = ' '.join(f.tags.get('TITLE', ['unknown_title']))
-        self.out.log("Artst: '%s'" % self.artist,
-                     '%s.extract' % self.type, self.dl + 1)
         self.out.log("Album: '%s'" % self.album,
                      '%s.extract' % self.type, self.dl + 1)
         self.out.log("Title: '%s'" % self.title,

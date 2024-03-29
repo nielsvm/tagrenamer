@@ -34,6 +34,10 @@ def get_application_context():
         default='__STAGE',
         help="Temporary directory before music hits its final spot.")
     parser.add_option(
+        "-a", "--albumartist",
+        action="store_true", dest="albumartist", default=False,
+        help="Use 'albumartist' tag when set to support VA albums.")
+    parser.add_option(
         "-s", "--shell",
         action="store_true", dest="shell", default=False,
         help="Generate and print shell commands (implies -q and -d)")
