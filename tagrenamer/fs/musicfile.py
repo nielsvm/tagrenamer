@@ -19,7 +19,7 @@ class MusicFile(File):
     - sanitize (obj)
     """
 
-    def __init__(self, output, path, extension, hooks={}, parent=None, dl=1):
+    def __init__(self, output, settings, path, extension, hooks={}, parent=None, dl=1):
         """Initialize the music file object."""
         self.relpath_new = ''
         self.artist = ''
@@ -33,6 +33,7 @@ class MusicFile(File):
         File.__init__(
             self,
             output,
+            settings,
             path=path,
             extension=extension,
             hooks=hooks,

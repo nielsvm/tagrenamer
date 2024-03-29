@@ -17,23 +17,17 @@ class Directory(Node):
     - mkdir (obj)
     """
 
-    def __init__(self, output, path, hooks={}, parent=None, dl=1):
+    def __init__(self, output, settings, path, hooks={}, parent=None, dl=1):
         """Initialize the directory object."""
         self.children = []
         Node.__init__(
             self,
             output,
+            settings,
             path=path,
             hooks=hooks,
             parent=parent,
             dl=dl)
-
-    def enableDryRun(self):
-        """Enable a dry-run mode on this object and its children.."""
-        Node.enableDryRun(self)
-        if len(self.children):
-            for c in self.children:
-                c.enableDryRun()
 
     def addChild(self, child):
         """Add a child node."""
@@ -75,6 +69,7 @@ class Directory(Node):
                 # Perform a set of tests and load the correct class for the found child.
                 if os.path.isdir(path):
                     node = Directory(output=self.out,
+                                     settings=self.settings,
                                      path=path,
                                      hooks=self.hooks,
                                      parent=self,
@@ -84,6 +79,7 @@ class Directory(Node):
                     extension = path.split('.').pop()
                     if extension in music_extensions:
                         node = MusicFile(output=self.out,
+                                         settings=self.settings,
                                          path=path,
                                          extension=extension,
                                          hooks=self.hooks,
@@ -91,6 +87,7 @@ class Directory(Node):
                                          dl=dl)
                     else:
                         node = File(output=self.out,
+                                    settings=self.settings,
                                     path=path,
                                     extension=extension,
                                     hooks=self.hooks,
@@ -98,14 +95,11 @@ class Directory(Node):
                                     dl=dl)
                 else:
                     node = Node(output=self.out,
+                                settings=self.settings,
                                 path=path,
                                 hooks=self.hooks,
                                 parent=self,
                                 dl=dl)
-
-                # Enable dry run if on the node if it applies to us.
-                if self.dryrun:
-                    node.enableDryRun()
 
                 # Append the child to our list of children.
                 self.children.append(node)
@@ -113,7 +107,7 @@ class Directory(Node):
     def mkdir(self):
         """Make this directory if it doesn't exist on disk yet."""
         self.out.log(str(self), '%s.mkdir' % self.type, self.dl)
-        if not self.dryrun:
+        if not self.settings.dryrun:
             os.mkdir(self.path)
         self.shellCollect('mkdir -v "{}"', self.path)
 
@@ -140,12 +134,11 @@ class Directory(Node):
             dl = self.dl + 1
             npath = "%s/%s" % (self.path, base)
             dir = Directory(output=self.out,
+                            settings=self.settings,
                             path=npath,
                             hooks=self.hooks,
                             parent=self,
                             dl=dl)
-            if self.dryrun:
-                dir.enableDryRun()
             dir.mkdir()
             self.children.append(dir)
         else:
@@ -167,7 +160,7 @@ class Directory(Node):
 
         # Remove the directory when it's emptied.
         self.shellCollect('rm -Rv "{}"', self.path)
-        if not self.dryrun:
+        if not self.settings.dryrun:
             os.rmdir(self.path)
 
         # Remove this instance from the parents list of children.
@@ -190,7 +183,7 @@ class Directory(Node):
         self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
         if not onlyReferences:
             self.shellCollect('mv -v "{}" "{}"', self.oldpath, self.path)
-            if not self.dryrun:
+            if not self.settings.dryrun:
                 os.rename(self.oldpath, self.path)
 
         # Unregister ourselves at our current parent and register at new parent.
@@ -201,7 +194,6 @@ class Directory(Node):
         # Re-parent ourselves and update several properties.
         self.parent = dest
         self.base = os.path.basename(self.path)
-        self.dryrun = self.parent.dryrun
         self.root = self.parent.root
         self.relpath = self.path.replace('%s/' % self.root, '')
         self.dl = self.parent.dl + 1

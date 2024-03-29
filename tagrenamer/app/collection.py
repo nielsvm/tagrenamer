@@ -38,32 +38,28 @@ class Collection():
         # the left-overs and stage directories.
         self.d_root = Directory(
             output=self.out,
+            settings=self.settings,
             path=self.settings.dir,
-            hooks={
-                'init': self.callbackInit,
-                'remove': self.callbackRemove,
-                'move': self.callbackMove,
-                'sanitize': self.callbackSanitize,
-                'traverse_filter': self.callbackTraverseFilter,
-                'shell_collect': self.callbackShellCollect,
-                'mkdir': self.callbackMkdir})
+            hooks={'init': self.callbackInit,
+                   'remove': self.callbackRemove,
+                   'move': self.callbackMove,
+                   'sanitize': self.callbackSanitize,
+                   'traverse_filter': self.callbackTraverseFilter,
+                   'shell_collect': self.callbackShellCollect,
+                   'mkdir': self.callbackMkdir})
         self.d_leftovers = Directory(
             output=self.out,
+            settings=self.settings,
             path="%s/%s" % (self.d_root.path, self.settings.leftoversdir),
             hooks={'shell_collect': self.callbackShellCollect},
             dl=2)
         self.d_stage = Directory(
             output=self.out,
+            settings=self.settings,
             path="%s/%s" % (self.d_root.path, self.settings.stagedir),
             hooks={'shell_collect': self.callbackShellCollect},
             parent=self.d_root,
             dl=2)
-
-        # If we run in --dry-run mode, enable it on all directory objects.
-        if self.settings.dryrun:
-            self.d_root.enableDryRun()
-            self.d_leftovers.enableDryRun()
-            self.d_stage.enableDryRun()
 
     def process(self):
         """Process the collection."""

@@ -6,6 +6,7 @@ Changelog
 Unreleased
 ----------
 
+* Inject the Settings object into the Node object for easier access.
 * Made the `makefile` more resilient by letting it check ``VIRTUAL_ENV``.
 * Documentation: set language so building readthedocs.io works again.
 * Documentation: made ``make docs`` fail on warnings.

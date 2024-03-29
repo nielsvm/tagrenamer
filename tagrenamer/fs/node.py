@@ -17,16 +17,17 @@ class Node():
     """
     dl = 1  # Short for debuglevel.
 
-    def __init__(self, output, path, hooks={}, parent=None, dl=1):
+    def __init__(self, output, settings, path, hooks={}, parent=None, dl=1):
         """Initialize the file-system node object."""
+        self.settings = settings
         self.out = output
+
         self.dl = self.dl + dl
         self.relpath = ''
         self.root = ''
         self.type = self.__class__.__name__
         self.path = os.path.abspath(path)
         self.base = os.path.basename(self.path)
-        self.dryrun = False
         self.parent = parent
         self.hooks = hooks
 
@@ -79,10 +80,6 @@ class Node():
         # Parse the command and call our shell_collect hook.
         self.invoke('shell_collect', command.format(*newargs))
 
-    def enableDryRun(self):
-        """Enable a dry-run mode on this object so that no real will things happen."""
-        self.dryrun = True
-
     def exists(self):
         """Determine whether the object really exists or not."""
         self.out.log(str(self), '%s.exists' % self.type, self.dl)
@@ -92,7 +89,7 @@ class Node():
         """Delete the file system object from disk."""
         self.out.log(str(self), '%s.remove' % self.type, self.dl)
         self.shellCollect('rm -v "{}"', self.path)
-        if not self.dryrun:
+        if not self.settings.dryrun:
             os.unlink(self.path)
 
         # Remove this instance from the parents list of children.
@@ -118,7 +115,7 @@ class Node():
             self.path = os.path.abspath('%s/%s' % (dest.path, self.base))
         if not onlyReferences:
             self.shellCollect('mv -v "{}" "{}"', self.oldpath, self.path)
-            if not self.dryrun:
+            if not self.settings.dryrun:
                 os.rename(self.oldpath, self.path)
 
         # Log the move action for retrospection.
@@ -135,7 +132,6 @@ class Node():
         # Re-parent ourselves and update several properties.
         self.parent = dest
         self.base = os.path.basename(self.path)
-        self.dryrun = self.parent.dryrun
         self.root = self.parent.root
         self.relpath = self.path.replace('%s/' % self.root, '')
         self.dl = self.parent.dl + 1

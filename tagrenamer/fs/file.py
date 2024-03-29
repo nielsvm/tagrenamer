@@ -10,11 +10,12 @@ class File(Node):
     Represent an ordinary file found on the file system.
     """
 
-    def __init__(self, output, path, extension, hooks={}, parent=None, dl=1):
+    def __init__(self, output, settings, path, extension, hooks={}, parent=None, dl=1):
         """Initialize the file object."""
         Node.__init__(
             self,
             output=output,
+            settings=settings,
             path=path,
             hooks=hooks,
             parent=parent,
