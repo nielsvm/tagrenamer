@@ -30,8 +30,7 @@ Install Tagrenamer into your home folder like this:
 
 .. code-block:: console
 
-    $ pip3 install -r requirements.txt
-    $ python3 -m pip install .
+    $ pipx install tagrenamer
 
 .. code-block:: console
 
