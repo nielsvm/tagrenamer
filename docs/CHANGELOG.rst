@@ -6,8 +6,9 @@ Changelog
 Unreleased
 ----------
 
-* Make documentation fail on warnings.
+* Made the `makefile` more resilient by letting it check ``VIRTUAL_ENV``.
 * Documentation: set language so building readthedocs.io works again.
+* Documentation: made ``make docs`` fail on warnings.
 
 0.0.3 (2024-03-29)
 ------------------

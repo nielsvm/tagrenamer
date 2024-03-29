@@ -42,20 +42,33 @@ clean-venv: ## remove existing virtual environment
 	rm -rf venv/
 
 lint/flake8: ## check style with flake8
+ifeq ($(origin VIRTUAL_ENV),undefined)
+	$(error "Please run: make venv; source venv/bin/activate")
+endif
 	flake8 tagrenamer tests
 
 lint: lint/flake8 ## check style
 
 test: ## run tests quickly with the default Python
+ifeq ($(origin VIRTUAL_ENV),undefined)
+	$(error "Please run: make venv; source venv/bin/activate")
+endif
 	python3 setup.py test
 
 coverage: ## check code coverage quickly with the default Python
+ifeq ($(origin VIRTUAL_ENV),undefined)
+	$(error "Please run: make venv; source venv/bin/activate")
+endif
 	coverage run --source tagrenamer setup.py test
 	coverage report -m
 	coverage html
 	echo && realpath htmlcov/index.html
 
-docs: venv ## generate Sphinx HTML documentation, including API docs
+docs: ## generate Sphinx HTML documentation, including API docs
+ifeq ($(origin VIRTUAL_ENV),undefined)
+	$(error "Please run: make venv; source venv/bin/activate")
+endif
+	echo "test"
 	rm -rf docs/modules
 	sphinx-apidoc -H "Modules" --tocfile "index" -o docs/modules/ tagrenamer
 	$(MAKE) -C docs clean
@@ -63,12 +76,21 @@ docs: venv ## generate Sphinx HTML documentation, including API docs
 	echo && realpath docs/_build/html/index.html
 
 servedocs: docs ## compile the docs watching for changes
+ifeq ($(origin VIRTUAL_ENV),undefined)
+	$(error "Please run: make venv; source venv/bin/activate")
+endif
 	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
 
 release: dist ## package and upload a release
+ifeq ($(origin VIRTUAL_ENV),undefined)
+	$(error "Please run: make venv; source venv/bin/activate")
+endif
 	twine upload dist/*
 
 dist: clean venv ## builds source and wheel package
+ifeq ($(origin VIRTUAL_ENV),undefined)
+	$(error "Please run: make venv; source venv/bin/activate")
+endif
 	python3 setup.py sdist
 	python3 setup.py bdist_wheel
 	echo && find dist/
