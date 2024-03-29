@@ -102,10 +102,10 @@ Features
 Installation
 ------------
 
-Install Tagrenamer directly from `PyPI`_ using ``pip``:
+Install Tagrenamer directly from `PyPI`_ using ``pipx``:
 
 .. code-block:: console
 
-   $ pip3 install tagrenamer
+   $ pipx install tagrenamer
 
 .. _PyPI: https://pypi.org/project/tagrenamer/

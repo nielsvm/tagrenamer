@@ -6,6 +6,9 @@ Changelog
 Unreleased
 ----------
 
+* Make documentation fail on warnings.
+* Documentation: set language so building readthedocs.io works again.
+
 0.0.3 (2024-03-29)
 ------------------
 
