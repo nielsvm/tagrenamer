@@ -320,22 +320,19 @@ class Collection():
         # Verify if a song with exactly the same artist, album, title wasn't
         # submitted before and abort the process if it does.
         if node.hash_s in self.hashes:
-            self.out.write(
-                "\nERROR: the following file has been "
-                "identified as a duplicate!\n")
-            self.out.write(
-                "What this means is that we scanned a "
-                "file earlier with exactly the")
-            self.out.write(
-                "same artist, album, title and extension. "
-                "To prevent this from")
-            self.out.write(
-                "causing any conflicts we need you to sort this out first.\n")
-            self.out.write("File:   '%s'" % node.relpath)
-            self.out.write("Artist: '%s'" % node.artist)
-            self.out.write("Album:  '%s'" % node.album)
-            self.out.write("Title:  '%s'" % node.title)
-            runtime_error("Aborted, no files have been touched!")
+            runtime_error("The following file appears to be a duplicate!\n\n"
+                          "This means that a earlier file was scanned\n with "
+                          "exactly the same metadata values:\n\n"
+                          "File:     '%s'\n"
+                          "Artist:   '%s'\n"
+                          "Album:    '%s'\n"
+                          "Title:    '%s'\n"
+                          "Track:    '%s'\n"
+                          % (node.relpath,
+                             node.artist,
+                             node.album,
+                             node.title,
+                             node.track))
         else:
             self.hashes.append(node.hash_s)
 
@@ -344,6 +341,7 @@ class Collection():
             'artist': node.artist_s,
             'album': node.album_s,
             'title': node.title_s,
+            'track': node.track_s,
             'hash': node.hash_s,
             'ext': node.extension.lower()}
 
@@ -362,11 +360,13 @@ class Collection():
                           "Artist:   '%s'\n"
                           "Album:    '%s'\n"
                           "Title:    '%s'\n"
+                          "Track:    '%s'\n"
                           % (node.relpath,
                              node.relpath_new,
                              node.artist,
                              node.album,
-                             node.title))
+                             node.title,
+                             node.track))
         else:
             self.musicfiles_new_relpaths.append(node.relpath_new)
 

@@ -6,6 +6,7 @@ Changelog
 Unreleased
 ----------
 
+* Feature: new ``{{track}}`` field to put tracknumbers in filenames.
 * Feature: new ``--albumartist`` opt-in flag to support VA albums.
 * Updated code to be pep8 compatible again.
 * Inject the Settings object into the Node object for easier access.

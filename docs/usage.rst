@@ -105,20 +105,20 @@ split up into many small folders like this using the default layout:
 .. code-block:: console
 
    Music
-   ├── alphaville
-   │   └── back to the disco hits of the 80s - cd 1
+   ├── alphaville/
+   │   └── back to the disco hits of the 80s/
    │       └── alphaville-31574918225b5d002d46aee87fc7aa67.mp3
-   ├── arabesque
-   │   └── back to the disco hits of the 80s - cd 1
+   ├── arabesque/
+   │   └── back to the disco hits of the 80s/
    │       └── arabesque-ece33749f59d5e3e1626b8d3156c21c5.mp3
-   ├── art company
-   │   └── back to the disco hits of the 80s - cd 2
+   ├── art company/
+   │   └── back to the disco hits of the 80s/
    │       └── art company-cfe0e9d57b00b5feb4e9a295d13bd211.mp3
-   ├── baccara
-   │   └── back to the disco hits of the 80s - cd 2
+   ├── baccara/
+   │   └── back to the disco hits of the 80s/
    │       └── baccara-de1ed352751402fd03180c18ed7595be.mp3
-   ├── bad boys blue
-   │   └── back to the disco hits of the 80s - cd 1
+   ├── bad boys blue/
+   │   └── back to the disco hits of the 80s/
    │       └── bad boys blue-7eea98175e2a57b388b14635bf437cc8.mp3
 
 This behavior is the default because Tagrenamer wasn't originally built with
@@ -136,22 +136,15 @@ as ``{artist}`` field when its set on the file:
 
 .. code-block:: console
 
-   Music
-   ├── alphaville
-   │   └── back to the disco hits of the 80s - cd 1
-   │       └── alphaville-31574918225b5d002d46aee87fc7aa67.mp3
-   ├── arabesque
-   │   └── back to the disco hits of the 80s - cd 1
-   │       └── arabesque-ece33749f59d5e3e1626b8d3156c21c5.mp3
-   ├── art company
-   │   └── back to the disco hits of the 80s - cd 2
-   │       └── art company-cfe0e9d57b00b5feb4e9a295d13bd211.mp3
-   ├── baccara
-   │   └── back to the disco hits of the 80s - cd 2
-   │       └── baccara-de1ed352751402fd03180c18ed7595be.mp3
-   ├── bad boys blue
-   │   └── back to the disco hits of the 80s - cd 1
-   │       └── bad boys blue-7eea98175e2a57b388b14635bf437cc8.mp3
+   Music/
+   ├── va/
+   │   ├── back to the disco hits of the 80s/
+   │   │   ├── va-03e0ecf25997dfdcb6b31fc68dbe254d.mp3
+   │   │   ├── va-0833886eaf4d628eb7dd51f52bfae056.mp3
+   │   │   ├── va-166a24512a5117378e4ea3cb9683e9c0.mp3
+   │   │   ├── va-22b104bb26f9db352a489a74d706b699.mp3
+   │   │   ├── va-27d0db875cb8381196c585fa04df72b0.mp3
+
 
 In case of doubt, run with the ``--shell`` parameter first to test.
 
@@ -192,9 +185,9 @@ Suppress all normal output:
 
 .. code-block:: console
 
-   Music
-   └── rammstein
-       └── mutter
+   Music/
+   └── rammstein/
+       └── mutter/
            ├── rammstein-1777b3a4c02565cec36c3e5f71f40102.mp3
            ├── rammstein-2ec6d3d6fc625fa6ea93ae283175f13c.mp3
            ├── rammstein-5bd7b80dbc746b409bc8a6093b65d1c3.mp3
@@ -278,9 +271,9 @@ collections and favors naming compatibility over readable filenames:
 
 .. code-block:: console
 
-   Music
-   └── rammstein
-       └── mutter
+   Music/
+   └── rammstein/
+       └── mutter/
            ├── rammstein-1777b3a4c02565cec36c3e5f71f40102.mp3
            ├── rammstein-2ec6d3d6fc625fa6ea93ae283175f13c.mp3
            └── rammstein-5bd7b80dbc746b409bc8a6093b65d1c3.mp3
@@ -291,18 +284,18 @@ Conventional three-level
 
 .. code-block:: console
 
-   Music
-   └── rammstein
-       ├── mutter
+   Music/
+   └── rammstein/
+       ├── mutter/
        │   ├── rammstein-adios.mp3
        │   ├── rammstein-feuer frei.mp3
        │   ├── rammstein-ich will.mp3
        │   └── rammstein-zwitter.mp3
-       ├── rosenrot
+       ├── rosenrot/
        │   ├── rammstein-benzin.mp3
        │   ├── rammstein-ein lied.mp3
        │   └── rammstein-feuer und wasser.mp3
-       └── sehnsucht
+       └── sehnsucht/
            ├── rammstein-alter mann.mp3
            ├── rammstein-bestrafe mich.mp3
            ├── rammstein-bueck dich.mp3
@@ -314,8 +307,8 @@ Two-level artist-only folders
 
 .. code-block:: console
 
-   Music
-   └── rammstein
+   Music/
+   └── rammstein/
        ├── mutter-adios.mp3
        ├── mutter-feuer frei.mp3
        ├── mutter-zwitter.mp3
@@ -325,6 +318,31 @@ Two-level artist-only folders
        ├── sehnsucht-alter mann.mp3
        ├── sehnsucht-bestrafe mich.mp3
        └── sehnsucht-tier.mp3
+
+Number-sorted Various Artists style
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``{artist}/{album}/{track}-{album}-{title}.{ext}``
+
+.. code-block:: console
+
+   Music/
+   ├── va/
+   │   ├── 60s summer hits/
+   │   │   ├── 1-60s summer hits-dancing in the street.mp3
+   │   │   ├── 2-60s summer hits-i cant get no satisfaction mono.mp3
+   │   │   ├── 3-60s summer hits-surfin usa remastered 2001.mp3
+   │   │   ├── 4-60s summer hits-california dreamin.mp3
+   │   │   ├── 5-60s summer hits-brown eyed girl.mp3
+   │   │   ├── 6-60s summer hits-hot fun in the summertime.mp3
+   │   │   ├── 7-60s summer hits-the twist.mp3
+   │   │   ├── 8-60s summer hits-the israelites.mp3
+   │   │   ├── 9-60s summer hits-the girl from ipanema.mp3
+   │   │   ├── 10-60s summer hits-what a wonderful world.mp3
+   │   │   ├── 11-60s summer hits-then he kissed me.mp3
+   │   │   ├── 12-60s summer hits-i cant help myself sugar pie honey bunch.mp3
+   │   │   ├── 13-60s summer hits-wooly bully.mp3
+   │   │   ├── 14-60s summer hits-ticket to ride.mp3
+   │   │   ├── 15-60s summer hits-twist and shout.mp3
 
 Put it all in one folder because I'm crazy!
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

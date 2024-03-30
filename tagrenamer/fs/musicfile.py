@@ -74,9 +74,12 @@ class MusicFile(File):
         # Extract the other fields:
         self.album = ' '.join(f.tags.get('ALBUM', ['unknown_album']))
         self.title = ' '.join(f.tags.get('TITLE', ['unknown_title']))
+        self.track = ' '.join(f.tags.get('TRACKNUMBER', ['unknown_track']))
         self.out.log("Album: '%s'" % self.album,
                      '%s.extract' % self.type, self.dl + 1)
         self.out.log("Title: '%s'" % self.title,
+                     '%s.extract' % self.type, self.dl + 1)
+        self.out.log("Track: '%s'" % self.track,
                      '%s.extract' % self.type, self.dl + 1)
 
     def sanitize(self):
@@ -85,6 +88,7 @@ class MusicFile(File):
         self.artist_s = str(SafeString(self.artist.strip()))
         self.album_s = str(SafeString(self.album.strip()))
         self.title_s = str(SafeString(self.title.strip()))
+        self.track_s = str(SafeString(self.track.strip())).replace('/', '-')
 
         # Start validating the data, based on field length.
         if not len(self.artist_s):
@@ -93,12 +97,15 @@ class MusicFile(File):
             raise ValueError(self)
         elif not len(self.title_s):
             raise ValueError(self)
+        elif not len(self.track_s):
+            raise ValueError(self)
 
         # Generate a hash from each string to build  a unique file identifier.
         self.hash = hashlib.md5()
         self.hash.update(self.artist_s.encode('utf-8'))
         self.hash.update(self.album_s.encode('utf-8'))
         self.hash.update(self.title_s.encode('utf-8'))
+        self.hash.update(self.track_s.encode('utf-8'))
         self.hash.update(self.extension.encode('utf-8'))
         self.hash_s = str(self.hash.hexdigest())
 
@@ -108,6 +115,8 @@ class MusicFile(File):
         self.out.log("{album}: '%s'" % self.album_s,
                      '%s.sanitize' % self.type, self.dl + 1)
         self.out.log("{title}: '%s'" % self.title_s,
+                     '%s.sanitize' % self.type, self.dl + 1)
+        self.out.log("{track}: '%s'" % self.track_s,
                      '%s.sanitize' % self.type, self.dl + 1)
         self.out.log("{hash}: '%s'" % self.hash_s,
                      '%s.sanitize' % self.type, self.dl + 1)
